@@ -50,7 +50,7 @@ const timeSlotSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase(addTimeSlot.fulfilled, (state, action) => {
+      .addCase(addTimeSlot.fulfilled, (state, action) => { 
         state.items.push(action.payload);
       })
       .addCase(toggleTimeSlotAvailability.fulfilled, (state, action) => {

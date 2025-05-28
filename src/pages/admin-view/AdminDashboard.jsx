@@ -1,33 +1,50 @@
-import { useState } from "react";
-import { FaEdit, FaPlus, FaMoneyBillWave, FaUsers, FaSearch, FaTrash } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { FaEdit, FaPlus, FaMoneyBillWave, FaUsers, FaSearch, FaTrash, FaToggleOn, FaToggleOff, FaSync } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllServices } from "../../../features/service-slice";
+import ServiceForm from "../../components/common/ServiceForm";
 
 function AdminDashboard() {
-    // Sample data for services
-    const [services, setServices] = useState([
-        { id: 1, name: "Hair Coloring", duration: "60 mins", price: "$80", category: "Hair" },
-        { id: 2, name: "Manicure", duration: "45 mins", price: "$35", category: "Nails" },
-        { id: 3, name: "Facial Treatment", duration: "90 mins", price: "$120", category: "Skin" },
-        { id: 4, name: "Haircut", duration: "30 mins", price: "$50", category: "Hair" },
-    ]);
-
-    // Search state
+    const dispatch = useDispatch();
+    const { services, loading, error } = useSelector((state) => state.services);
     const [searchTerm, setSearchTerm] = useState("");
     const [showAddModal, setShowAddModal] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    useEffect(() => {
+        dispatch(fetchAllServices());
+    }, [dispatch]);
+
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        dispatch(fetchAllServices())
+            .finally(() => setIsRefreshing(false));
+    };
 
     // Filter services based on search term
     const filteredServices = services.filter(service => {
+        if (!service) return false;
+        
         const searchLower = searchTerm.toLowerCase();
         return (
-            service.name.toLowerCase().includes(searchLower) ||
-            service.category.toLowerCase().includes(searchLower) ||
-            service.price.includes(searchTerm) ||
-            service.duration.toLowerCase().includes(searchLower)
+            (service.serviceName && service.serviceName.toLowerCase().includes(searchLower)) ||
+            (service.categoryName && service.categoryName.toLowerCase().includes(searchLower)) ||
+            (service.price && service.price.toString().includes(searchTerm))
         );
     });
 
     const deleteService = (id) => {
-        setServices(prev => prev.filter(service => service.id !== id));
+        // You should dispatch an action here to delete from backend
+        console.log("Delete service with id:", id);
     };
+
+    const toggleServiceStatus = (serviceId) => {
+        // You should dispatch an action here to update backend
+        console.log("Toggle status for service:", serviceId);
+    };
+
+    if (loading && !isRefreshing) return <p className="p-6">Loading services...</p>;
+    if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
 
     return (
         <div className="flex flex-col lg:flex-row bg-gray-50 min-h-[calc(100vh-3.5rem)] p-4 lg:p-6 gap-6 overflow-y-auto">
@@ -36,13 +53,23 @@ function AdminDashboard() {
                 {/* Header with Add New button */}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl md:text-2xl font-bold text-gray-800">Service Management</h1>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 cursor-pointer rounded-md transition duration-200 flex items-center justify-center text-sm whitespace-nowrap"
-                    >
-                        <FaPlus className="mr-2 font-semibold" />
-                        Add Service
-                    </button>
+                    <div className="flex items-center space-x-3">
+                        <button
+                            onClick={handleRefresh}
+                            className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-3 rounded-md transition duration-200 flex items-center justify-center"
+                            disabled={isRefreshing}
+                            title="Refresh data"
+                        >
+                            <FaSync className={`${isRefreshing ? 'animate-spin' : ''}`} />
+                        </button>
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 cursor-pointer rounded-md transition duration-200 flex items-center justify-center text-sm whitespace-nowrap"
+                        >
+                            <FaPlus className="mr-2 font-semibold" />
+                            Add Service
+                        </button>
+                    </div>
                 </div>
 
                 {/* Three cards at the top */}
@@ -90,7 +117,7 @@ function AdminDashboard() {
                             </div>
                             <input
                                 type="text"
-                                placeholder="Search services..."
+                                placeholder="Search by name, category or price..."
                                 className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm py-2"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -102,10 +129,10 @@ function AdminDashboard() {
                         <table className="w-full min-w-[600px]">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Name</th>
+                                    <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
                                     <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                    <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
                                     <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                    <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -114,19 +141,55 @@ function AdminDashboard() {
                                     filteredServices.map((service) => (
                                         <tr key={service.id} className="hover:bg-gray-50">
                                             <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">{service.name}</div>
+                                                <div className="flex items-center">
+                                                    {service.image ? (
+                                                        <div className="flex-shrink-0 h-10 w-10 mr-3">
+                                                            <img 
+                                                                className="h-10 w-10 rounded-full object-cover" 
+                                                                src={`data:image/jpeg;base64,${service.image}`} 
+                                                                alt={service.serviceName} 
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex-shrink-0 h-10 w-10 mr-3 bg-gray-200 rounded-full flex items-center justify-center">
+                                                            <span className="text-xs text-gray-500">No Image</span>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            {service.serviceName || 'N/A'}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {service.timeSlots?.length || 0} time slots
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{service.category}</div>
+                                                <div className="text-sm text-gray-900">
+                                                    {service.categoryName || 'N/A'}
+                                                </div>
                                             </td>
                                             <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{service.duration}</div>
+                                                <div className="text-sm text-gray-900">
+                                                    ${service.price || '0.00'}
+                                                </div>
                                             </td>
                                             <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{service.price}</div>
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                    {service.active ? 'Active' : 'Inactive'}
+                                                </span>
                                             </td>
                                             <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <button className="text-purple-600 hover:text-purple-900 mr-3">Edit</button>
+                                                <button className="text-purple-600 hover:text-purple-900 mr-3">
+                                                    <FaEdit />
+                                                </button>
+                                                <button 
+                                                    onClick={() => toggleServiceStatus(service.id)}
+                                                    className={`mr-3 ${service.active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                                                >
+                                                    {service.active ? <FaToggleOff size={18} /> : <FaToggleOn size={18} />}
+                                                </button>
                                                 <button 
                                                     className="text-red-600 hover:text-red-900"
                                                     onClick={() => deleteService(service.id)}
@@ -139,7 +202,7 @@ function AdminDashboard() {
                                 ) : (
                                     <tr>
                                         <td colSpan="5" className="px-4 md:px-6 py-4 text-center text-sm text-gray-500">
-                                            No services found matching your search
+                                            {services.length === 0 ? 'No services available' : 'No services match your search'}
                                         </td>
                                     </tr>
                                 )}
@@ -148,7 +211,6 @@ function AdminDashboard() {
                     </div>
                 </div>
             </div>
-
             {/* Right sidebar - Profile section */}
             <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-2">
                 <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -201,6 +263,7 @@ function AdminDashboard() {
                     </div>
                 </div>
             </div>
+            <ServiceForm isOpen={showAddModal} onClose={()=>setShowAddModal(false)}/>
         </div>
     );
 }

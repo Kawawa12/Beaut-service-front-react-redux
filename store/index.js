@@ -3,7 +3,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../features/auth-slice";
 import { adminReducer } from "../features/admin-slice";
 import { categoryReducer } from "../features/category-slice";
-import timeSlotReducer from "../features/slot-slice/index"
+import timeSlotReducer from "../features/slot-slice/index";
+import serviceReducer from "../features/service-slice/index";
 
 
 
@@ -12,7 +13,8 @@ const store = configureStore({
     auth: authReducer,
     admin: adminReducer,
     categories: categoryReducer,
-    timeSlots: timeSlotReducer
+    timeSlots: timeSlotReducer,
+    services: serviceReducer,
   },
 });
 

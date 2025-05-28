@@ -15,8 +15,8 @@ const TimeSlot = () => {
     error,
   } = useSelector((state) => state.timeSlots);
   const [formData, setFormData] = useState({ startTime: "", endTime: "" });
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [togglingId, setTogglingId] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [togglingId, setTogglingId] = useState(false);
 
   // Format time to AM/PM
   const formatTime = (timeString) => {
@@ -92,9 +92,8 @@ const TimeSlot = () => {
         <div className="flex gap-2">
           <button
             onClick={refreshTimeSlots}
-            className={`flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-lg transition ${
-              status === "loading" ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-lg transition ${status === "loading" ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={status === "loading"}
           >
             <FaSync className={`${isRefreshing ? "animate-spin" : ""}`} />
@@ -193,11 +192,10 @@ const TimeSlot = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`px-2 inline-flex text-xs font-semibold rounded-full ${
-                      slot.available
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
+                    className={`px-2 inline-flex text-xs font-semibold rounded-full ${slot.available
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                      }`}
                   >
                     {slot.available ? "Available" : "Unavailable"}
                   </span>
@@ -206,15 +204,13 @@ const TimeSlot = () => {
                   <button
                     onClick={() => handleToggleAvailability(slot.id)}
                     disabled={togglingId === slot.id}
-                    className={`inline-flex items-center px-3 py-1 rounded-md ${
-                      slot.available
-                        ? "bg-red-100 text-red-700 hover:bg-red-200"
-                        : "bg-green-100 text-green-700 hover:bg-green-200"
-                    } ${
-                      togglingId === slot.id
+                    className={`inline-flex items-center px-3 py-1 rounded-md ${slot.available
+                      ? "bg-red-100 text-red-700 hover:bg-red-200"
+                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                      } ${togglingId === slot.id
                         ? "opacity-50 cursor-not-allowed"
                         : ""
-                    }`}
+                      }`}
                   >
                     {togglingId === slot.id ? (
                       <span className="flex items-center">
