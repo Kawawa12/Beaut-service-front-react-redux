@@ -9,7 +9,6 @@ import Notification from "./components/common/Notifications";
 import SpecialOffers from "./pages/receptionist-view/SpecialOffers";
 import AdminLayout from "./components/admin-view/AdminLayout";
 import AdminDashboard from "./pages/admin-view/AdminDashboard";
-import AdminServices from "./pages/admin-view/AdminServices";
 import Customers from "./pages/admin-view/Customers";
 import Receptionist from "./pages/admin-view/Receptionist";
 import Reports from "./pages/admin-view/Reports";
@@ -20,6 +19,7 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth } from "../features/auth-slice";
 import Category from "./pages/admin-view/AdminServices";
+import TimeSlot from "./components/common/TimeSlot";
 
  
  
@@ -49,6 +49,7 @@ function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="category" element={<Category />} />
+        <Route path="time-slots" element={ <TimeSlot/>} />
         <Route path="bookings" element={<ReceptionBookings />} />
         <Route path="users" element={<Customers />} />
         <Route path="receptionists" element={<Receptionist />} />

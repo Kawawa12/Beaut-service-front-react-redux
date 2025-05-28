@@ -4,6 +4,7 @@ import {
   MdLogout,
   MdDesignServices,
   MdPeople,
+  MdAccessTime,
   MdReport,
 } from "react-icons/md";
 import { FaUserPlus } from "react-icons/fa";
@@ -25,6 +26,12 @@ export const adminMenuItems = [
     label: "Manage Category",
     icon: <MdDesignServices size={22} />,
     path: "/admin/category",
+  },
+  {
+    id: "manage-time-slots",
+    label: "Manage Time Slot",
+    icon: <MdAccessTime size={22} />,
+    path: "/admin/time-slots",
   },
   {
     id: "bookings",
