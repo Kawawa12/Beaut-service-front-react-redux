@@ -60,7 +60,7 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch categories";
+        state.error = action.payload.message || "Failed to fetch categories";
       }).addCase(createCategory.pending, (state) => {
         state.loading = true;
         state.error = null;

@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
-import { FaEnvelope, FaLock, FaTimes,FaSpinner } from "react-icons/fa";
-import { clearAuthStatus, loginUser } from "../../../features/auth-slice/index";
+import { FaEnvelope, FaLock, FaSpinner } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import { motion } from "framer-motion";
+import { clearAuthStatus, loginUser } from "../../../features/auth-slice/index";
+import Header from "../../components/common/Header";
+import ForgotPasswordModal from "../../components/common/ForgotPassword";
 
- 
-
-const LoginForm = ({ onClose, onSwitchToRegister }) => {
+const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
-  const { status, role } = useSelector((state) => state.auth); // Added role to selector
   const navigate = useNavigate();
+  const { status } = useSelector((state) => state.auth);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+
+  useEffect(() => {
+    dispatch(clearAuthStatus());
+  }, [dispatch]);
 
   const validate = () => {
     const newErrors = {};
@@ -31,45 +38,31 @@ const LoginForm = ({ onClose, onSwitchToRegister }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user types
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
-
-// Reset auth status when component mounts
-  useEffect(() => {
-    dispatch(clearAuthStatus());
-    return () => {
-      // Cleanup if needed
-    };
-  }, [dispatch]);
-
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
     try {
       const response = await dispatch(loginUser(formData)).unwrap();
-      
-      const successMsg = response.message || "Login successful";
-      const userRole = response.role;
 
       await Swal.fire({
         icon: "success",
         title: "Success",
-        text: successMsg,
+        text: response.message || "Login successful",
         timer: 1500,
         showConfirmButton: false,
       });
 
-      // Clear the loading status
       dispatch(clearAuthStatus());
 
-      // Redirect based on role
-      switch (userRole) {
+      switch (response.role) {
         case "ADMIN":
           navigate("/admin/dashboard");
           break;
@@ -82,42 +75,48 @@ const handleSubmit = async (e) => {
         default:
           navigate("/");
       }
-
-      onClose?.();
     } catch (error) {
-      const errorMsg = error || "Login failed. Please try again.";
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: errorMsg,
+        text: error || "Login failed. Please try again.",
       });
-      // Clear the loading status on error too
       dispatch(clearAuthStatus());
     }
   };
 
+  const handleForgotPassword = () => {
+    // You can redirect to your forgot password route or show a modal
+    navigate("/forgot-password");
+  };
 
+    const handleSendOTP = (email) => {
+    console.log("OTP sent to:", email);
+    setIsModalOpen(false);
+    // Show success message or redirect to OTP entry page
+  };
 
   return (
-    <div className="fixed inset-0 bg-white/10 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl animate-fadeIn">
-        <div className="flex justify-between items-center mb-6">
-          <span className="text-3xl font-bold text-pink-600">Sign in</span>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition"
-          >
-            <FaTimes size={20} />
-          </button>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-white p-4">
+      <Header />
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl"
+      >
+        <h1 className="text-4xl font-bold text-pink-600 mb-6 text-center">
+          Sign in
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-700 mb-2" htmlFor="email">
+            <label htmlFor="email" className="block text-gray-700 mb-2">
               Email
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaEnvelope className="text-gray-400" />
               </div>
               <input
@@ -139,11 +138,11 @@ const handleSubmit = async (e) => {
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2" htmlFor="password">
+            <label htmlFor="password" className="block text-gray-700 mb-2">
               Password
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaLock className="text-gray-400" />
               </div>
               <input
@@ -163,38 +162,51 @@ const handleSubmit = async (e) => {
             )}
           </div>
 
-          <div className="pt-2">
+          <div className="text-right text-lg py-2 text-pink-600 mb-2">
             <button
-              type="submit"
-              disabled={status === "loading"}
-              className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 px-4 rounded-lg font-medium transition duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+              type="button"
+              onClick={()=> setIsModalOpen(true)}
+              className="hover:underline"
             >
-              {status === "loading" ? (
-                <>
-                  <FaSpinner className="animate-spin" />
-                  Logging in...
-                </>
-              ) : (
-                "Login"
-              )}
+              Forgot password?
             </button>
           </div>
+
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 px-4 rounded-lg font-medium transition duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {status === "loading" ? (
+              <>
+                <FaSpinner className="animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
+          </button>
 
           <div className="text-center text-sm text-gray-600 pt-2">
             Don't have an account?{" "}
             <button
               type="button"
-              onClick={onSwitchToRegister}
-              className="text-pink-600 hover:text-pink-700 font-medium"
+              onClick={() => navigate("/register")}
+              className="text-pink-600 hover:text-pink-700 text-lg font-medium"
             >
               Register
             </button>
           </div>
         </form>
-      </div>
+      </motion.div>
+
+      <ForgotPasswordModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSendOTP={handleSendOTP}
+      />
     </div>
   );
 };
- 
 
-export default LoginForm;
+export default LoginPage;

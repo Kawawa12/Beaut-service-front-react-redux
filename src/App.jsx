@@ -20,6 +20,9 @@ import { useEffect } from "react";
 import { checkAuth } from "../features/auth-slice";
 import Category from "./pages/admin-view/AdminServices";
 import TimeSlot from "./components/common/TimeSlot";
+import Register from "./pages/auth-page/Register";
+import Login from "./pages/auth-page/Login";
+import VerifyOtpPage from "./components/common/VerifyOtpPage";
 
  
  
@@ -35,8 +38,10 @@ function App() {
   return (
     <Routes>
       {/* Public Route */}
-      <Route path="/" element={<BeautyHomePage />} />
-
+        <Route path="/" element={<BeautyHomePage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/my-otp" element={<VerifyOtpPage />} />
       {/* Protected Admin Routes */}
       <Route
         path="/admin"
