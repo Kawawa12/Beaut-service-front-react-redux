@@ -18,7 +18,7 @@ const Header = ({
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="text-3xl font-bold text-white font-serif">
-              <span className="text-pink-400">Beauté</span>
+              <span className="text-pink-400">Beauté Services</span>
             </Link>
           </div>
 

@@ -23,6 +23,10 @@ import TimeSlot from "./components/common/TimeSlot";
 import Register from "./pages/auth-page/Register";
 import Login from "./pages/auth-page/Login";
 import VerifyOtpPage from "./components/common/VerifyOtpPage";
+import BeautServices from "./pages/client-view/BeautServices";
+import AboutUs from "./components/common/AboutUs";
+import Contact from "./components/common/Contact";
+import BookingWizard from "./pages/client-view/BookingWizard";
 
  
  
@@ -38,10 +42,15 @@ function App() {
   return (
     <Routes>
       {/* Public Route */}
-        <Route path="/" element={<BeautyHomePage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/my-otp" element={<VerifyOtpPage />} />
+      <Route path="/" element={<BeautyHomePage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/services" element={<BeautServices />} />
+       {/* Booking wizard where user selects date/time/details */}
+      <Route path="/booking/:id" element={<BookingWizard />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/my-otp" element={<VerifyOtpPage />} />
       {/* Protected Admin Routes */}
       <Route
         path="/admin"

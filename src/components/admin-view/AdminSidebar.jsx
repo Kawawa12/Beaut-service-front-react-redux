@@ -76,7 +76,9 @@ function AdminSidebar({ closeSidebar }) {
   } finally {
     setIsLoggingOut(false);
   }
-};
+  };
+  
+  
   const SidebarNavLink = ({ item }) => (
     <NavLink
       to={item.path}

@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { FaUser, FaEnvelope, FaPhone, FaLock } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaSpinner } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header";
-import { motion } from "framer-motion"; // ✅ Framer Motion import
-
+import { motion } from "framer-motion";
+import { registerUser } from "../../../features/auth-slice";
+import { useDispatch, useSelector } from "react-redux";
+import Swal from "sweetalert2";
+ 
 const Register = () => {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -14,6 +17,11 @@ const Register = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const { status, error: authError } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const isLoading = status === "loading";
 
   const validate = () => {
     const newErrors = {};
@@ -40,19 +48,47 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (validate()) {
       const { confirmPassword, ...submitData } = formData;
-      console.log("Register form submitted:", submitData);
+
+      try {
+        const resultAction = await dispatch(registerUser(submitData));
+
+        if (registerUser.fulfilled.match(resultAction)) {
+          Swal.fire({
+            title: "Registration Successful!",
+            text: resultAction.payload?.message || "You can now log in.",
+            icon: "success",
+            confirmButtonText: "Go to Login",
+          }).then(() => {
+            navigate("/login");
+          });
+        } else if (registerUser.rejected.match(resultAction)) {
+          Swal.fire({
+            title: "Registration Failed",
+            text:
+              resultAction.payload || "Something went wrong. Please try again.",
+            icon: "error",
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          title: "Error",
+          text: "An unexpected error occurred. Please try again.",
+          icon: "error",
+        });
+      }
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-white p-4">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-pink-100 to-white">
       <Header />
 
-      {/*  Center container */}
+      {/* Center container */}
       <div className="flex-grow flex items-center justify-center px-4 py-12">
         {/* Framer Motion animated form */}
         <motion.div
@@ -65,9 +101,13 @@ const Register = () => {
             Create Account
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ... all input fields stay the same ... */}
+          {authError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {authError}
+            </div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Full Name Field */}
             <div>
               <label className="block text-gray-700 mb-2" htmlFor="fullName">
@@ -95,8 +135,8 @@ const Register = () => {
               )}
             </div>
 
-            {/* ... rest of your fields (email, phone, password, etc.) ... */}
-              <div>
+            {/* Email Field */}
+            <div>
               <label className="block text-gray-700 mb-2" htmlFor="email">
                 Email
               </label>
@@ -122,6 +162,7 @@ const Register = () => {
               )}
             </div>
 
+            {/* Phone Field */}
             <div>
               <label className="block text-gray-700 mb-2" htmlFor="phone">
                 Phone Number
@@ -147,6 +188,7 @@ const Register = () => {
               )}
             </div>
 
+            {/* Password Field */}
             <div>
               <label className="block text-gray-700 mb-2" htmlFor="password">
                 Password
@@ -172,8 +214,12 @@ const Register = () => {
               )}
             </div>
 
+            {/* Confirm Password Field */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="confirmPassword">
+              <label
+                className="block text-gray-700 mb-2"
+                htmlFor="confirmPassword"
+              >
                 Confirm Password
               </label>
               <div className="relative">
@@ -187,25 +233,37 @@ const Register = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className={`pl-10 w-full p-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                    errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                    errors.confirmPassword
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                   placeholder="••••••••"
                 />
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 px-4 rounded-lg font-medium transition duration-300"
-              >
-                Register
-              </button>
-            </div>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 px-4 rounded-lg font-medium transition duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <FaSpinner className="animate-spin" />
+                  Registering...
+                </>
+              ) : (
+                "Register"
+              )}
+            </button>
 
+            {/* Login Link */}
             <div className="text-center text-sm text-gray-600">
               Already have an account?{" "}
               <Link

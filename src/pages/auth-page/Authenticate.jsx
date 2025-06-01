@@ -25,9 +25,10 @@ function Authenticate({ children }) {
   if (isAuthenticated && isAuthPage) {
     if (role === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
     if (role === "RECEPTIONIST") return <Navigate to="/reception/dashboard" replace />;
-    return <Navigate to="/service-page" replace />;
+    return <Navigate to="/services" replace />;
   }
 
+   
   // Prevent unauthorized role access
   if (isAuthenticated) {
     if (isAdminRoute && role !== "ADMIN") {

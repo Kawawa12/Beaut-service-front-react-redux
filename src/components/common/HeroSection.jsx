@@ -1,8 +1,17 @@
 // components/HeroSection.js
 import { FaArrowRight } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+
+    const naviagete = useNavigate();
+
+
+    const goToBeautService = () => {
+        naviagete("/services");
+    }
+
   return (
     <section className="relative w-full min-h-screen overflow-hidden mt-16">
       {/* Background image with enhanced overlay */}
@@ -45,7 +54,9 @@ const HeroSection = () => {
               <button className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg transition-all transform hover:scale-105">
                 Book Now
               </button>
-              <button className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg backdrop-blur-sm transition-all transform hover:scale-105">
+              <button 
+              onClick={()=> goToBeautService}
+              className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg backdrop-blur-sm transition-all transform hover:scale-105">
                 View Services
               </button>
             </motion.div>

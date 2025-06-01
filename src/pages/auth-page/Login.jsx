@@ -70,7 +70,7 @@ const LoginPage = () => {
           navigate("/reception/dashboard");
           break;
         case "CUSTOMER":
-          navigate("/service-page");
+          navigate("/services");
           break;
         default:
           navigate("/");
