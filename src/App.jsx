@@ -27,6 +27,8 @@ import BeautServices from "./pages/client-view/BeautServices";
 import AboutUs from "./components/common/AboutUs";
 import Contact from "./components/common/Contact";
 import BookingWizard from "./pages/client-view/BookingWizard";
+import MyProfile from "./pages/client-view/MyProfile";
+import MyBookings from "./pages/client-view/MyBookings";
 
  
  
@@ -45,6 +47,8 @@ function App() {
       <Route path="/" element={<BeautyHomePage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="my-profile" element={<MyProfile />} />
+      <Route path="/my-bookings" element={<MyBookings />} />
       <Route path="/services" element={<BeautServices />} />
        {/* Booking wizard where user selects date/time/details */}
       <Route path="/booking/:id" element={<BookingWizard />} />

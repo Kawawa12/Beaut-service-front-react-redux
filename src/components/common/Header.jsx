@@ -1,14 +1,11 @@
 // components/common/Header.js
-import { FaUser, FaCalendarAlt, FaLock, FaBars, FaTimes, FaArrowRight } from "react-icons/fa";
+import { FaBars, FaTimes, FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const Header = ({ 
   isMenuOpen,
   setIsMenuOpen,
-  mobileMenuRef,
-  profileDropdownRef,
-  isProfileDropdownOpen,
-  setIsProfileDropdownOpen
+  mobileMenuRef
 }) => {
   return (
     <>
@@ -48,57 +45,6 @@ const Header = ({
               >
                 Sign Up
               </Link>
-              
-              {/* Profile Dropdown */}
-              <div className="relative" ref={profileDropdownRef}>
-                <button
-                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="w-10 h-10 rounded-full bg-pink-600 text-white hover:bg-pink-500 transition flex items-center justify-center"
-                >
-                  <FaUser />
-                </button>
-                {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-700 animate-fadeIn">
-                    <div className="px-4 py-3 border-b border-gray-700">
-                      <p className="text-sm text-gray-300">Signed in as</p>
-                      <p className="text-sm font-semibold text-white">
-                        user@example.com
-                      </p>
-                    </div>
-                    {[
-                      {
-                        text: "My Profile",
-                        icon: <FaUser className="text-pink-400" />,
-                        link: "/profile"
-                      },
-                      {
-                        text: "My Bookings",
-                        icon: <FaCalendarAlt className="text-pink-400" />,
-                        link: "/bookings"
-                      },
-                      {
-                        text: "Change Password",
-                        icon: <FaLock className="text-pink-400" />,
-                        link: "/change-password"
-                      },
-                      {
-                        text: "Sign Out",
-                        icon: <FaArrowRight className="text-pink-400" />,
-                        link: "/logout"
-                      },
-                    ].map(({ text, icon, link }) => (
-                      <Link
-                        key={text}
-                        to={link}
-                        className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 transition"
-                      >
-                        <span className="mr-3">{icon}</span>
-                        <span>{text}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </nav>
 
@@ -142,27 +88,6 @@ const Header = ({
               <FaArrowRight className="mr-3 text-pink-400" /> {item}
             </Link>
           ))}
-
-          {/* My Account Section */}
-          <div className="mt-6 pt-4 border-t border-gray-800">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              My Account
-            </h3>
-            {[
-              { text: "My Profile", icon: <FaUser className="text-pink-400" />, link: "/profile" },
-              { text: "My Bookings", icon: <FaCalendarAlt className="text-pink-400" />, link: "/bookings" },
-              { text: "Change Password", icon: <FaLock className="text-pink-400" />, link: "/change-password" },
-            ].map(({ text, icon, link }) => (
-              <Link
-                key={text}
-                to={link}
-                className="flex items-center py-3 text-gray-300 hover:text-white font-medium transition"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="mr-3">{icon}</span> {text}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </>

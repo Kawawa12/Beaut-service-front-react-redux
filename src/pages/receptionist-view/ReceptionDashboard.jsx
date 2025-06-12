@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   FaEdit,
@@ -6,18 +6,22 @@ import {
   FaCalendarAlt,
   FaUserClock,
   FaSearch,
-  FaEllipsisV,
 } from "react-icons/fa";
 import { fetchAllBookings } from "../../../features/booking-slice";
+import Modal from 'react-modal';
+
+Modal.setAppElement('#root');
 
 function ReceptionDashboard() {
   const dispatch = useDispatch();
   const { bookings, loading, error } = useSelector((state) => state.bookings);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const dropdownRefs = useRef({});
-  const dropdownMenuRefs = useRef({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [pin, setPin] = useState("");
+  const [showPinPrompt, setShowPinPrompt] = useState(false);
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     dispatch(fetchAllBookings());
@@ -47,52 +51,33 @@ function ReceptionDashboard() {
       .toUpperCase();
   };
 
-  const toggleDropdown = (bookingId, e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setOpenDropdown(openDropdown === bookingId ? null : bookingId);
+  const openBookingModal = (booking) => {
+    setSelectedBooking(booking);
+    setStatus(booking.status);
+    setIsModalOpen(true);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        openDropdown &&
-        !dropdownRefs.current[openDropdown]?.contains(event.target) &&
-        !dropdownMenuRefs.current[openDropdown]?.contains(event.target)
-      ) {
-        setOpenDropdown(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [openDropdown]);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+    setShowPinPrompt(false);
+    setPin("");
+  };
 
-  const getDropdownStyle = (bookingId) => {
-    if (
-      !openDropdown ||
-      openDropdown !== bookingId ||
-      !dropdownRefs.current[bookingId]
-    ) {
-      return { display: "none" };
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+    setShowPinPrompt(true);
+  };
+
+  const confirmStatusChange = () => {
+    if (!pin) {
+      alert('Please enter a PIN');
+      return;
     }
-
-    const button = dropdownRefs.current[bookingId];
-    const buttonRect = button.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - buttonRect.bottom;
-    const dropdownHeight = 112;
-
-    return {
-      position: "fixed",
-      left: `${buttonRect.left}px`,
-      top:
-        spaceBelow > dropdownHeight
-          ? `${buttonRect.bottom}px`
-          : `${buttonRect.top - dropdownHeight}px`,
-      width: "192px",
-      zIndex: 50,
-    };
+    // Here you would dispatch an action to update the booking status
+    console.log(`Updating booking ${selectedBooking.id} to status ${status} with PIN ${pin}`);
+    // dispatch(updateBookingStatus({ id: selectedBooking.id, status, pin }));
+    closeModal();
   };
 
   return (
@@ -195,35 +180,12 @@ function ReceptionDashboard() {
                           )}
                         </td>
                         <td className="px-3 py-4">
-                          <div className="relative">
-                            <button
-                              ref={(el) => (dropdownRefs.current[booking.id] = el)}
-                              onClick={(e) => toggleDropdown(booking.id, e)}
-                              className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                            >
-                              <FaEllipsisV />
-                            </button>
-                            {openDropdown === booking.id && (
-                              <div
-                                ref={(el) => (dropdownMenuRefs.current[booking.id] = el)}
-                                className="fixed mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-                                style={getDropdownStyle(booking.id)}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="py-1">
-                                  <button className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">
-                                    Mark as IN_SERVICE
-                                  </button>
-                                  <button className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">
-                                    Mark as COMPLETED
-                                  </button>
-                                  <button className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">
-                                    Mark as TEMPORARY
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => openBookingModal(booking)}
+                            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                          >
+                            View
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -263,6 +225,135 @@ function ReceptionDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Booking Details Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        contentLabel="Booking Details"
+        className="modal-content"
+        overlayClassName="modal-overlay"
+      >
+        {selectedBooking && (
+          <div className="p-6">
+            <h2 className="text-xl font-bold mb-4">Booking Details</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <h3 className="font-medium text-gray-700">Client</h3>
+                <p>{selectedBooking.clientName}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Service</h3>
+                <p>{selectedBooking.serviceName}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Date</h3>
+                <p>{formatDate(selectedBooking.bookingDate)}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Time</h3>
+                <p>{selectedBooking.timeSlot}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Status</h3>
+                <p className="capitalize">{selectedBooking.status.toLowerCase()}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">PIN</h3>
+                <p>{selectedBooking.confirmationPin}</p>
+              </div>
+            </div>
+
+            {!showPinPrompt ? (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-3">Change Booking Status</h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleStatusChange('COMPLETED')}
+                    className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    Mark as Complete
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange('IN_SERVICE')}
+                    className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Mark as In Service
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange('PENDING')}
+                    className="w-full px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                  >
+                    Mark as Pending
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-3">Confirm with PIN</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Changing status to: <span className="font-semibold">{status}</span>
+                </p>
+                <input
+                  type="password"
+                  placeholder="Enter your PIN"
+                  className="w-full p-2 border rounded mb-4"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                />
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowPinPrompt(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={confirmStatusChange}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={closeModal}
+              className="mt-6 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal styling */}
+      <style jsx global>{`
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        .modal-content {
+          background: white;
+          padding: 0;
+          border-radius: 8px;
+          max-width: 500px;
+          width: 90%;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+      `}</style>
     </div>
   );
 }

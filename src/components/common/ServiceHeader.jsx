@@ -1,9 +1,8 @@
-// components/common/ServiceHeader.js
-import { useState } from 'react';
-import { FaSignOutAlt, FaBars, FaTimes } from "react-icons/fa";
+import { useState, useRef, useEffect } from 'react';
+import { FaSignOutAlt, FaBars, FaTimes, FaUser, FaCalendarAlt } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { logoutUser } from "../../../features/auth-slice";
+import { logoutUser, selectIsAuthenticated } from "../../../features/auth-slice";
 import { selectAuthLoading } from "../../../features/auth-slice";
 
 const ServiceHeader = ({ 
@@ -14,7 +13,24 @@ const ServiceHeader = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
   const isLoading = useSelector(selectAuthLoading);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  // Handle outside click to close profile dropdown
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, []);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -26,6 +42,15 @@ const ServiceHeader = ({
       console.error('Logout failed:', error);
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const handleProfileClick = (e) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      navigate('/login');
+    } else {
+      setIsProfileDropdownOpen(false);
     }
   };
 
@@ -54,19 +79,58 @@ const ServiceHeader = ({
               </Link>
             ))}
             
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              disabled={isLoading || isLoggingOut}
-              className="flex items-center space-x-3 text-white hover:text-pink-300 transition text-xl"
-            >
-              <span>Logout</span>
-              {isLoggingOut ? (
-                <span className="animate-spin">↻</span>
-              ) : (
-                <FaSignOutAlt className="text-2xl" />
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <button
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                className="w-10 h-10 rounded-full bg-pink-600 text-white hover:bg-pink-500 transition flex items-center justify-center"
+              >
+                <FaUser />
+              </button>
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-700 animate-fadeIn">
+                  <div className="px-4 py-3 border-b border-gray-700">
+                    <p className="text-sm text-gray-300">Signed in as</p>
+                    <p className="text-sm font-semibold text-white">
+                      {isAuthenticated ? 'user@example.com' : 'Guest'}
+                    </p>
+                  </div>
+                  {[
+                    {
+                      text: "My Profile",
+                      icon: <FaUser className="text-pink-400" />,
+                      link: "/my-profile",
+                      onClick: handleProfileClick
+                    },
+                    {
+                      text: "My Bookings",
+                      icon: <FaCalendarAlt className="text-pink-400" />,
+                      link: "/my-bookings",
+                      onClick: handleProfileClick
+                    },
+                    {
+                      text: "Logout",
+                      icon: <FaSignOutAlt className="text-pink-400" />,
+                      onClick: handleLogout
+                    }
+                  ].map(({ text, icon, link, onClick }) => (
+                    <Link
+                      key={text}
+                      to={link}
+                      onClick={(e) => {
+                        if (onClick) {
+                          onClick(e);
+                        }
+                      }}
+                      className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 transition"
+                    >
+                      <span className="mr-3">{icon}</span>
+                      <span>{text}</span>
+                    </Link>
+                  ))}
+                </div>
               )}
-            </button>
+            </div>
           </nav>
 
           {/* Mobile Toggle */}
@@ -110,18 +174,66 @@ const ServiceHeader = ({
             </Link>
           ))}
 
-          {/* Logout Button */}
-          <button
-            onClick={(e) => {
-              handleLogout(e);
-              setIsMenuOpen(false);
-            }}
-            disabled={isLoading || isLoggingOut}
-            className="flex items-center py-4 text-gray-300 hover:text-white text-xl font-medium transition w-full"
-          >
-            <FaSignOutAlt className="mr-4 text-2xl text-pink-400" />
-            {isLoggingOut ? 'Logging out...' : 'Logout'}
-          </button>
+          {/* My Account Section */}
+          <div className="mt-6 pt-4 border-t border-gray-800">
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              My Account
+            </h3>
+            {[
+              { 
+                text: "My Profile", 
+                icon: <FaUser className="text-pink-400" />, 
+                link: "/client/my-profile",
+                onClick: (e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault();
+                    navigate('/login');
+                    setIsMenuOpen(false);
+                  } else {
+                    setIsMenuOpen(false);
+                  }
+                }
+              },
+              { 
+                text: "My Bookings", 
+                icon: <FaCalendarAlt className="text-pink-400" />, 
+                link: "/client/my-bookings",
+                onClick: (e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault();
+                    navigate('/login');
+                    setIsMenuOpen(false);
+                  } else {
+                    setIsMenuOpen(false);
+                  }
+                }
+              },
+              { 
+                text: isLoggingOut ? "Logging out..." : "Logout", 
+                icon: <FaSignOutAlt className="text-pink-400" />, 
+                onClick: (e) => {
+                  handleLogout(e);
+                  setIsMenuOpen(false);
+                }
+              }
+            ].map(({ text, icon, link, onClick }) => (
+              <Link
+                key={text}
+                to={link || "#"}
+                onClick={(e) => {
+                  if (onClick) {
+                    onClick(e);
+                  } else {
+                    setIsMenuOpen(false);
+                  }
+                }}
+                className="flex items-center py-4 text-gray-300 hover:text-white text-xl font-medium transition"
+              >
+                <span className="mr-4">{icon}</span>
+                {text}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </>
