@@ -18,7 +18,7 @@ const BeautServiceCard = ({ service }) => {
     try {
       // First check if we need to refresh auth state
       if (!isAuthenticated) {
-        const resultAction = await dispatch(checkAuth());
+        const resultAction = dispatch(checkAuth());
         
         if (checkAuth.fulfilled.match(resultAction)) {
           // User is authenticated but not a customer

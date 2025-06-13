@@ -1,16 +1,17 @@
-// components/HeroSection.js
-import { FaArrowRight } from "react-icons/fa";
+import { FaArrowRight, FaCalendarAlt } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
 
-    const naviagete = useNavigate();
+  const goToBeautServices = () => {
+    navigate("/services");
+  };
 
-
-    const goToBeautService = () => {
-        naviagete("/services");
-    }
+  const goToEventContact = () => {
+    navigate("/contact");
+  };
 
   return (
     <section className="relative w-full min-h-screen overflow-hidden mt-16">
@@ -43,7 +44,7 @@ const HeroSection = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-xl md:text-2xl text-white/90 mb-8 mx-auto max-w-2xl"
             >
-              Premium beauty services tailored for the modern woman
+              Premium beauty services and event transformations tailored for the modern woman
             </motion.p>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -51,13 +52,23 @@ const HeroSection = () => {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="flex flex-col sm:flex-row justify-center gap-4"
             >
-              <button className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg transition-all transform hover:scale-105">
+              <button 
+                onClick={goToBeautServices}
+                className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg transition-all transform hover:scale-105"
+              >
                 Book Now
               </button>
               <button 
-              onClick={()=> goToBeautService}
-              className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg backdrop-blur-sm transition-all transform hover:scale-105">
+                onClick={goToBeautServices}
+                className="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg backdrop-blur-sm transition-all transform hover:scale-105"
+              >
                 View Services
+              </button>
+              <button 
+                onClick={goToEventContact}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg transition-all transform hover:scale-105 flex items-center justify-center"
+              >
+                Plan an Event <FaCalendarAlt className="ml-2" />
               </button>
             </motion.div>
           </div>
@@ -127,6 +138,7 @@ const HeroSection = () => {
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={goToBeautServices}
                   className="flex items-center justify-center w-full bg-white text-pink-600 px-6 py-3 rounded-lg font-medium hover:bg-pink-50 transition-all"
                 >
                   Claim Offer <FaArrowRight className="ml-2" />

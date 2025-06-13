@@ -42,6 +42,25 @@ export const fetchAllBookings = createAsyncThunk(
   }
 );
 
+// 🔹 Confirm Booking by PIN
+export const confirmBookingByPin = createAsyncThunk(
+  'bookings/confirmBookingByPin',
+  async ({ bookingId, pin }, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/confirm?id=${bookingId}&pin=${pin}`,
+        null, // No body; params are in URL
+        {
+          withCredentials: true,
+        }
+      );
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to confirm booking');
+    }
+  }
+);
+
 
 const bookingsSlice = createSlice({
   name: 'bookings',
@@ -86,7 +105,22 @@ const bookingsSlice = createSlice({
       .addCase(fetchAllBookings.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      
+      //Confirm bookings
+      .addCase(confirmBookingByPin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(confirmBookingByPin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.successMessage = action.payload.message;
+      })
+      .addCase(confirmBookingByPin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to confirm booking';
+      });;
   },
 });
 

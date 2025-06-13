@@ -1,12 +1,12 @@
 // src/redux/clientSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
 const BASE_URL = "http://localhost:8080/api/customer";
 
-// ✅ Async thunk to fetch client profile
+// Async thunk to fetch client profile
 export const fetchClientProfile = createAsyncThunk(
-  'client/fetchProfile',
+  "client/fetchProfile",
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/profile`, {
@@ -15,15 +15,15 @@ export const fetchClientProfile = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to fetch profile'
+        error.response?.data?.message || "Failed to fetch profile"
       );
     }
   }
 );
 
-// ✅ Async thunk to fetch client bookings
+// Async thunk to fetch client bookings
 export const fetchMyBookings = createAsyncThunk(
-  'client/fetchMyBookings',
+  "client/fetchMyBookings",
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/my-bookings`, {
@@ -32,14 +32,31 @@ export const fetchMyBookings = createAsyncThunk(
       return response.data; // Array of bookings
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to fetch bookings'
+        error.response?.data?.message || "Failed to fetch bookings"
+      );
+    }
+  }
+);
+
+// Update profile
+export const updateClientProfile = createAsyncThunk(
+  "client/updateProfile",
+  async (profileData, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${BASE_URL}/profile`, profileData, {
+        withCredentials: true,
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update profile"
       );
     }
   }
 );
 
 const clientSlice = createSlice({
-  name: 'client',
+  name: "client",
   initialState: {
     profile: null,
     bookings: [],
@@ -70,7 +87,7 @@ const clientSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ✅ Booking fetching
+      //  Booking fetching
       .addCase(fetchMyBookings.pending, (state) => {
         state.bookingLoading = true;
         state.bookingError = null;
@@ -82,6 +99,14 @@ const clientSlice = createSlice({
       .addCase(fetchMyBookings.rejected, (state, action) => {
         state.bookingLoading = false;
         state.bookingError = action.payload;
+      })
+
+      //Update profile
+      .addCase(updateClientProfile.fulfilled, (state, action) => {
+        state.profile = action.payload;
+      })
+      .addCase(updateClientProfile.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });

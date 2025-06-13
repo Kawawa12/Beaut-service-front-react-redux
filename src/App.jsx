@@ -29,6 +29,7 @@ import Contact from "./components/common/Contact";
 import BookingWizard from "./pages/client-view/BookingWizard";
 import MyProfile from "./pages/client-view/MyProfile";
 import MyBookings from "./pages/client-view/MyBookings";
+import EventContact from "./components/common/Contact";
 
  
  
@@ -47,9 +48,12 @@ function App() {
       <Route path="/" element={<BeautyHomePage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="my-profile" element={<MyProfile />} />
+      <Route path="/my-profile" element={<MyProfile />} />
       <Route path="/my-bookings" element={<MyBookings />} />
       <Route path="/services" element={<BeautServices />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/contact" element={<EventContact />} />
+
        {/* Booking wizard where user selects date/time/details */}
       <Route path="/booking/:id" element={<BookingWizard />} />
       <Route path="/about-us" element={<AboutUs />} />

@@ -1,12 +1,14 @@
-// components/common/Header.js
 import { FaBars, FaTimes, FaArrowRight } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const Header = ({ 
   isMenuOpen,
   setIsMenuOpen,
   mobileMenuRef
 }) => {
+  const navItems = ["Home", "About Us", "Services", "Contact"];
+  const authItems = ["Sign In", "Sign Up"];
+
   return (
     <>
       {/* Desktop Header */}
@@ -14,37 +16,50 @@ const Header = ({
         <div className="container mx-auto px-6 flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/" className="text-3xl font-bold text-white font-serif">
+            <NavLink to="/" className="text-3xl font-bold text-white font-serif">
               <span className="text-pink-400">Beauté Services</span>
-            </Link>
+            </NavLink>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {["Home", "About Us", "Services", "Contact"].map((item) => (
-              <Link
+            {navItems.map((item) => (
+              <NavLink
                 key={item}
                 to={item === "Home" ? "/" : `/${item.toLowerCase().replace(' ', '-')}`}
-                className="text-white hover:text-pink-300 text-lg transition font-medium relative group"
+                className={({ isActive }) => 
+                  `text-white text-lg font-medium relative group transition after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-pink-400 after:transition-all after:duration-300 ${
+                    isActive
+                      ? 'text-pink-400 after:w-full'
+                      : 'hover:text-pink-300 after:w-0 group-hover:after:w-full'
+                  }`
+                }
               >
                 {item}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-pink-400 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              </NavLink>
             ))}
             
             <div className="flex items-center space-x-4 ml-6">
-              <Link
+              <NavLink
                 to="/login"
-                className="bg-transparent hover:bg-pink-600 text-white px-6 py-2 rounded-full border border-pink-400 transition font-medium"
+                className={({ isActive }) => 
+                  `bg-transparent text-white px-6 py-2 rounded-full border border-pink-400 font-medium transition ${
+                    isActive ? 'bg-pink-600 text-white' : 'hover:bg-pink-600 hover:text-white'
+                  }`
+                }
               >
                 Sign In
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/register"
-                className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-full transition font-medium shadow-lg"
+                className={({ isActive }) => 
+                  `bg-pink-600 text-white px-6 py-2 rounded-full font-medium shadow-lg transition ${
+                    isActive ? 'bg-pink-700' : 'hover:bg-pink-700'
+                  }`
+                }
               >
                 Sign Up
-              </Link>
+              </NavLink>
             </div>
           </nav>
 
@@ -76,17 +91,42 @@ const Header = ({
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 space-y-4">
           {/* General Menu */}
-          {["Home", "About Us", "Services", "Contact", "Sign In", "Sign Up"].map((item) => (
-            <Link
+          {navItems.map((item) => (
+            <NavLink
               key={item}
               to={item === "Home" ? "/" : `/${item.toLowerCase().replace(' ', '-')}`}
-              className="flex items-center py-3 text-gray-300 hover:text-white font-medium transition"
+              className={({ isActive }) => 
+                `flex items-center py-3 font-medium transition ${
+                  isActive ? 'text-pink-400' : 'text-gray-300 hover:text-white'
+                }`
+              }
               onClick={() => setIsMenuOpen(false)}
             >
               <FaArrowRight className="mr-3 text-pink-400" /> {item}
-            </Link>
+            </NavLink>
+          ))}
+          {/* Auth Menu */}
+          {authItems.map((item) => (
+            <NavLink
+              key={item}
+              to={`/${item.toLowerCase().replace(' ', '-')}`}
+              className={({ isActive }) => 
+                `flex items-center py-3 px-6 rounded-full font-medium transition ${
+                  item === 'Sign In'
+                    ? `border border-pink-400 ${
+                        isActive ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-pink-600 hover:text-white'
+                      }`
+                    : `bg-pink-600 text-white ${
+                        isActive ? 'bg-pink-700' : 'hover:bg-pink-700'
+                      }`
+                }`
+              }
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <FaArrowRight className="mr-3 text-white" /> {item}
+            </NavLink>
           ))}
         </div>
       </div>

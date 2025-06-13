@@ -6,11 +6,39 @@ import {
   FaCalendarAlt,
   FaUserClock,
   FaSearch,
+  FaSyncAlt,
 } from "react-icons/fa";
-import { fetchAllBookings } from "../../../features/booking-slice";
+import { confirmBookingByPin, fetchAllBookings } from "../../../features/booking-slice";
 import Modal from 'react-modal';
+import Swal from "sweetalert2";
 
 Modal.setAppElement('#root');
+
+// Modal styles moved outside the component
+const modalStyles = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  content: {
+    background: 'white',
+    padding: 0,
+    borderRadius: '8px',
+    maxWidth: '500px',
+    width: '90%',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  }
+};
 
 function ReceptionDashboard() {
   const dispatch = useDispatch();
@@ -22,10 +50,16 @@ function ReceptionDashboard() {
   const [pin, setPin] = useState("");
   const [showPinPrompt, setShowPinPrompt] = useState(false);
   const [status, setStatus] = useState("");
+  const [isConfirmPinOpen, setIsConfirmPinOpen] = useState(false);
+  const [confirmPin, setConfirmPin] = useState("");
 
   useEffect(() => {
     dispatch(fetchAllBookings());
   }, [dispatch]);
+
+  const handleRefresh = () => {
+    dispatch(fetchAllBookings());
+  };
 
   const filteredBookings = bookings.filter((booking) => {
     const searchLower = searchTerm.toLowerCase();
@@ -74,10 +108,85 @@ function ReceptionDashboard() {
       alert('Please enter a PIN');
       return;
     }
-    // Here you would dispatch an action to update the booking status
     console.log(`Updating booking ${selectedBooking.id} to status ${status} with PIN ${pin}`);
-    // dispatch(updateBookingStatus({ id: selectedBooking.id, status, pin }));
     closeModal();
+  };
+
+  const openConfirmPinPrompt = (booking) => {
+    setSelectedBooking(booking);
+    setIsConfirmPinOpen(true);
+  };
+
+  const closeConfirmPinPrompt = () => {
+    setIsConfirmPinOpen(false);
+    setConfirmPin("");
+    setSelectedBooking(null);
+  };
+
+  const submitConfirmPin = async () => {
+    if (!confirmPin) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing PIN',
+        text: 'Please enter a confirmation PIN.',
+      });
+      return;
+    }
+
+    try {
+      const result = await dispatch(
+        confirmBookingByPin({ bookingId: selectedBooking.id, pin: confirmPin })
+      ).unwrap();
+
+      switch (result.message) {
+        case 'Invalid confirmation PIN.':
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid PIN',
+            text: 'The confirmation PIN entered is incorrect.',
+          });
+          break;
+
+        case 'PIN has expired.':
+          Swal.fire({
+            icon: 'warning',
+            title: 'Expired PIN',
+            text: 'The confirmation PIN has expired. Please ask the client to rebook.',
+          });
+          break;
+
+        case 'Booking is already confirmed.':
+          Swal.fire({
+            icon: 'info',
+            title: 'Already Confirmed',
+            text: 'This booking was already confirmed.',
+          });
+          break;
+
+        case 'Booking confirmed successfully.':
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'The booking has been confirmed successfully.',
+          });
+          dispatch(fetchAllBookings()); // Refresh bookings list
+          closeConfirmPinPrompt();
+          break;
+
+        default:
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid!',
+            text: result.message || 'Something went wrong.',
+          });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error || 'Something went wrong while confirming the booking.',
+      });
+    }
   };
 
   return (
@@ -115,15 +224,25 @@ function ReceptionDashboard() {
             <h2 className="text-xl font-semibold text-gray-800">
               Upcoming Bookings
             </h2>
-            <div className="relative w-full md:w-64">
-              <FaSearch className="absolute left-3 top-3 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search bookings..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:ring-pink-500 focus:border-pink-500 text-sm"
-              />
+            <div className="flex items-center gap-3">
+              <div className="relative w-full md:w-64">
+                <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search bookings..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                />
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
+                title="Refresh bookings"
+              >
+                <FaSyncAlt />
+                <span className="hidden md:inline">Refresh</span>
+              </button>
             </div>
           </div>
 
@@ -179,12 +298,18 @@ function ReceptionDashboard() {
                             <span className="text-red-500">No</span>
                           )}
                         </td>
-                        <td className="px-3 py-4">
+                        <td className="px-3 py-4 flex space-x-2">
                           <button
                             onClick={() => openBookingModal(booking)}
                             className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                           >
                             View
+                          </button>
+                          <button
+                            onClick={() => openConfirmPinPrompt(booking)}
+                            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                          >
+                            Confirm
                           </button>
                         </td>
                       </tr>
@@ -231,8 +356,7 @@ function ReceptionDashboard() {
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Booking Details"
-        className="modal-content"
-        overlayClassName="modal-overlay"
+        style={modalStyles}
       >
         {selectedBooking && (
           <div className="p-6">
@@ -329,31 +453,41 @@ function ReceptionDashboard() {
         )}
       </Modal>
 
-      {/* Modal styling */}
-      <style jsx global>{`
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: rgba(0, 0, 0, 0.5);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-        .modal-content {
-          background: white;
-          padding: 0;
-          border-radius: 8px;
-          max-width: 500px;
-          width: 90%;
-          max-height: 90vh;
-          overflow-y: auto;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-      `}</style>
+      {/* Confirm PIN Modal */}
+      <Modal
+        isOpen={isConfirmPinOpen}
+        onRequestClose={closeConfirmPinPrompt}
+        contentLabel="Confirm Booking PIN"
+        style={modalStyles}
+      >
+        <div className="p-6">
+          <h2 className="text-xl font-bold mb-4">Confirm Booking</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Please enter the confirmation PIN for booking ID: {selectedBooking?.id}
+          </p>
+          <input
+            type="password"
+            placeholder="Enter confirmation PIN"
+            className="w-full p-4 border rounded mb-4"
+            value={confirmPin}
+            onChange={(e) => setConfirmPin(e.target.value)}
+          />
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={closeConfirmPinPrompt}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitConfirmPin}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

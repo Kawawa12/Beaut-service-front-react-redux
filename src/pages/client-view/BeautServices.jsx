@@ -1,37 +1,56 @@
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllServices } from '../../../features/service-slice';
 import BeautServiceCard from '../../components/common/BeautServiceCard';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ServiceHeader from '../../components/common/ServiceHeader';
-
+ 
 const BeautServiceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { services, loading, error } = useSelector((state) => state.services);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
 
+  // Fetch services on mount
   useEffect(() => {
     dispatch(fetchAllServices());
   }, [dispatch]);
 
+  // Handle outside click to close mobile menu
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, []);
+
   if (loading) return <LoadingSpinner message="Loading services..." />;
-  if (error) return <ErrorMessage message={`Error loading services: ${error}`} />;
+ 
 
   const availableServices = services.filter(s => s.status === 'Available');
 
   return (
-    <div className="overflow-y-auto">
+    <div className="overflow-y-auto min-h-screen">
       {/* Full-width Header */}
-      <div className="w-full">
-        <ServiceHeader />
-      </div>
+      <ServiceHeader
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        mobileMenuRef={mobileMenuRef}
+      />
 
       {/* Content Container */}
-      <div className="container mx-auto px-4 mt-30 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="container mx-auto px-4 pt-20 py-8">
+        <div className="flex justify-between items-center mt-20 mb-8">
           <button 
-            onClick={() => navigate(-1)} // Go back to previous page
+            onClick={() => navigate(-1)}
             className="flex items-center text-pink-600 hover:text-pink-700"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">

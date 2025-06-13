@@ -37,6 +37,7 @@ const ServiceHeader = ({
     setIsLoggingOut(true);
     try {
       await dispatch(logoutUser()).unwrap();
+      setIsMenuOpen(false);
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -45,12 +46,14 @@ const ServiceHeader = ({
     }
   };
 
-  const handleProfileClick = (e) => {
+  const handleLinkClick = (e, link) => {
     if (!isAuthenticated) {
       e.preventDefault();
+      setIsMenuOpen(false);
       navigate('/login');
     } else {
-      setIsProfileDropdownOpen(false);
+      setIsMenuOpen(false);
+      navigate(link);
     }
   };
 
@@ -84,6 +87,7 @@ const ServiceHeader = ({
               <button
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                 className="w-10 h-10 rounded-full bg-pink-600 text-white hover:bg-pink-500 transition flex items-center justify-center"
+                aria-label="Profile"
               >
                 <FaUser />
               </button>
@@ -100,27 +104,28 @@ const ServiceHeader = ({
                       text: "My Profile",
                       icon: <FaUser className="text-pink-400" />,
                       link: "/my-profile",
-                      onClick: handleProfileClick
                     },
                     {
                       text: "My Bookings",
                       icon: <FaCalendarAlt className="text-pink-400" />,
                       link: "/my-bookings",
-                      onClick: handleProfileClick
                     },
                     {
-                      text: "Logout",
+                      text: isLoggingOut ? "Logging out..." : "Logout",
                       icon: <FaSignOutAlt className="text-pink-400" />,
                       onClick: handleLogout
                     }
                   ].map(({ text, icon, link, onClick }) => (
                     <Link
                       key={text}
-                      to={link}
+                      to={link || '#'}
                       onClick={(e) => {
                         if (onClick) {
                           onClick(e);
+                        } else {
+                          handleLinkClick(e, link);
                         }
+                        setIsProfileDropdownOpen(false);
                       }}
                       className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 transition"
                     >
@@ -156,6 +161,7 @@ const ServiceHeader = ({
           <button
             onClick={() => setIsMenuOpen(false)}
             className="text-gray-400 hover:text-white"
+            aria-label="Close Menu"
           >
             <FaTimes size={24} />
           </button>
@@ -183,48 +189,27 @@ const ServiceHeader = ({
               { 
                 text: "My Profile", 
                 icon: <FaUser className="text-pink-400" />, 
-                link: "/client/my-profile",
-                onClick: (e) => {
-                  if (!isAuthenticated) {
-                    e.preventDefault();
-                    navigate('/login');
-                    setIsMenuOpen(false);
-                  } else {
-                    setIsMenuOpen(false);
-                  }
-                }
+                link: "/my-profile",
               },
               { 
                 text: "My Bookings", 
                 icon: <FaCalendarAlt className="text-pink-400" />, 
-                link: "/client/my-bookings",
-                onClick: (e) => {
-                  if (!isAuthenticated) {
-                    e.preventDefault();
-                    navigate('/login');
-                    setIsMenuOpen(false);
-                  } else {
-                    setIsMenuOpen(false);
-                  }
-                }
+                link: "/my-bookings",
               },
               { 
                 text: isLoggingOut ? "Logging out..." : "Logout", 
                 icon: <FaSignOutAlt className="text-pink-400" />, 
-                onClick: (e) => {
-                  handleLogout(e);
-                  setIsMenuOpen(false);
-                }
+                onClick: handleLogout
               }
             ].map(({ text, icon, link, onClick }) => (
               <Link
                 key={text}
-                to={link || "#"}
+                to={link || '#'}
                 onClick={(e) => {
                   if (onClick) {
                     onClick(e);
                   } else {
-                    setIsMenuOpen(false);
+                    handleLinkClick(e, link);
                   }
                 }}
                 className="flex items-center py-4 text-gray-300 hover:text-white text-xl font-medium transition"

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { fetchClientProfile } from '../../../features/client-slice';
-import { FaEdit, FaSave, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { fetchClientProfile, updateClientProfile } from '../../../features/client-slice';
+import { FaEdit, FaSave, FaTimes, FaArrowLeft, FaUser, FaEnvelope, FaPhone } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 
 const MyProfile = () => {
   const dispatch = useDispatch();
@@ -84,7 +85,6 @@ const MyProfile = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Validate all fields before submission
     const newErrors = {
       fullName: formData.fullName.trim().length < 2,
       email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email),
@@ -94,12 +94,25 @@ const MyProfile = () => {
     setErrors(newErrors);
 
     if (!Object.values(newErrors).some(Boolean)) {
-      // Here you would typically dispatch an update action
-      console.log('Submitting:', formData);
-      // Simulate API call
-      setTimeout(() => {
-        setEditMode(false);
-      }, 1000);
+      dispatch(updateClientProfile(formData))
+        .unwrap()
+        .then(() => {
+          Swal.fire({
+            title: 'Success!',
+            text: 'Profile updated successfully',
+            icon: 'success',
+            confirmButtonColor: '#ec4899',
+          });
+          setEditMode(false);
+        })
+        .catch((err) => {
+          Swal.fire({
+            title: 'Error!',
+            text: err || 'Failed to update profile',
+            icon: 'error',
+            confirmButtonColor: '#ec4899',
+          });
+        });
     }
   };
 
@@ -115,168 +128,192 @@ const MyProfile = () => {
 
   if (loading && !profile) {
     return (
-      <div className="flex justify-center mt-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-pink-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-pink-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-xl mx-auto bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-700">
-        <p className="text-red-500 text-center text-lg">Error loading profile: {error}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="py-6">
-      <style>
-        {`
-          .profile-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 1.5rem;
-            border: 2px solid ${editMode ? '#f472b6' : '#4b5563'};
-            border-radius: 8px;
-            background-color: ${editMode ? '#1f2937' : '#374151'};
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-          }
-          .profile-input:disabled {
-            background-color: #4b5563;
-            color: #9ca3af;
-          }
-          .profile-input:focus {
-            outline: none;
-            border-color: #f472b6;
-            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.2);
-          }
-          .error {
-            border-color: #ef4444;
-          }
-          .error-text {
-            color: #ef4444;
-            font-size: 0.875rem;
-            margin-top: -1rem;
-            margin-bottom: 1rem;
-          }
-          .avatar {
-            width: 120px;
-            height: 120px;
-            background-color: #f472b6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            border-radius: 50%;
-            color: white;
-            margin: 0 auto 1.5rem;
-          }
-        `}
-      </style>
-      <div className="max-w-xl mx-auto bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-700">
-        <div className="flex justify-start mb-4">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-700">
+          <p className="text-red-400 text-center text-lg">Error loading profile: {error}</p>
           <button
             onClick={handleGoBack}
-            className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+            className="mt-4 w-full px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition flex items-center justify-center"
           >
             <FaArrowLeft className="mr-2" />
             Go Back
           </button>
         </div>
-        <div className="avatar">{getInitials(formData.fullName)}</div>
-        <h2 className="text-3xl font-bold text-white text-center mb-6">My Profile</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="fullName" className="block text-gray-300 mb-2 text-sm font-medium">
-              Full Name
-            </label>
-            <input
-              id="fullName"
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              className={`profile enter code here-input ${errors.fullName ? 'error' : ''}`}
-              disabled={!editMode}
-            />
-            {errors.fullName && (
-              <p className="error-text">Please enter a valid name</p>
-            )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <button
+          onClick={handleGoBack}
+          className="flex items-center px-4 py-2 mb-6 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition shadow-md"
+        >
+          <FaArrowLeft className="mr-2" />
+          Go Back
+        </button>
+
+        <div className="bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700">
+          {/* Profile Header */}
+          <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-6 text-center">
+            <div className="relative mx-auto w-32 h-32 rounded-full bg-white bg-opacity-20 flex items-center justify-center shadow-lg border-4 border-white border-opacity-20">
+              {profile?.photoUrl ? (
+                <img 
+                  src={profile.photoUrl} 
+                  alt="Profile" 
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-4xl font-bold text-white">
+                  {getInitials(formData.fullName)}
+                </span>
+              )}
+              {editMode && (
+                <button className="absolute bottom-0 right-0 bg-pink-500 rounded-full p-2 hover:bg-pink-600 transition shadow-md">
+                  <FaEdit className="text-white text-sm" />
+                </button>
+              )}
+            </div>
+            <h2 className="text-3xl font-bold text-white mt-4">My Profile</h2>
+            <p className="text-pink-100 mt-1">Member since {new Date(profile?.createdAt).toLocaleDateString()}</p>
           </div>
 
-          <div>
-            <label htmlFor="email" className="block text-gray-300 mb-2 text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`profile-input ${errors.email ? 'error' : ''}`}
-              disabled={!editMode}
-            />
-            {errors.email && (
-              <p className="error-text">Please enter a valid email</p>
-            )}
-          </div>
+          {/* Profile Form */}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
+            <div className="space-y-6">
+              {/* Full Name Field */}
+              <div className="relative">
+                <div className="flex items-center mb-2">
+                  <FaUser className="text-pink-500 mr-2" />
+                  <label htmlFor="fullName" className="block text-gray-300 text-sm font-medium">
+                    Full Name
+                  </label>
+                </div>
+                <input
+                  id="fullName"
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 pl-10 bg-gray-700 border ${
+                    editMode 
+                      ? errors.fullName 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-pink-500 focus:ring-pink-500'
+                      : 'border-gray-600 focus:ring-gray-500'
+                  } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition`}
+                  disabled={!editMode}
+                  placeholder="Enter your full name"
+                />
+                {errors.fullName && (
+                  <p className="mt-1 text-sm text-red-400">Please enter a valid name (at least 2 characters)</p>
+                )}
+              </div>
 
-          <div>
-            <label htmlFor="phone" className="block text-gray-300 mb-2 text-sm font-medium">
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className={`profile-input ${errors.phone ? 'error' : ''}`}
-              disabled={!editMode}
-            />
-            {errors.phone && (
-              <p className="error-text">Please enter a valid phone number (10-15 digits)</p>
-            )}
-          </div>
+              {/* Email Field */}
+              <div className="relative">
+                <div className="flex items-center mb-2">
+                  <FaEnvelope className="text-pink-500 mr-2" />
+                  <label htmlFor="email" className="block text-gray-300 text-sm font-medium">
+                    Email
+                  </label>
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 pl-10 bg-gray-700 border ${
+                    editMode 
+                      ? errors.email 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-pink-500 focus:ring-pink-500'
+                      : 'border-gray-600 focus:ring-gray-500'
+                  } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition`}
+                  disabled={!editMode}
+                  placeholder="Enter your email"
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-400">Please enter a valid email address</p>
+                )}
+              </div>
 
-          <div className="flex justify-end gap-4 mt-6">
-            {editMode ? (
-              <>
+              {/* Phone Field */}
+              <div className="relative">
+                <div className="flex items-center mb-2">
+                  <FaPhone className="text-pink-500 mr-2" />
+                  <label htmlFor="phone" className="block text-gray-300 text-sm font-medium">
+                    Phone Number
+                  </label>
+                </div>
+                <input
+                  id="phone"
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 pl-10 bg-gray-700 border ${
+                    editMode 
+                      ? errors.phone 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-pink-500 focus:ring-pink-500'
+                      : 'border-gray-600 focus:ring-gray-500'
+                  } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition`}
+                  disabled={!editMode}
+                  placeholder="Enter your phone number"
+                />
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-400">Please enter a valid phone number (10-15 digits)</p>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-700">
+              {editMode ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="flex items-center px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition shadow-md"
+                  >
+                    <FaTimes className="mr-2" />
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={Object.values(errors).some(Boolean)}
+                    className={`flex items-center px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition shadow-md ${
+                      Object.values(errors).some(Boolean) ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <FaSave className="mr-2" />
+                    Save Changes
+                  </button>
+                </>
+              ) : (
                 <button
                   type="button"
-                  onClick={handleCancel}
-                  className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                  onClick={handleEdit}
+                  className="flex items-center px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition shadow-md"
                 >
-                  <FaTimes className="mr-2" />
-                  Cancel
+                  <FaEdit className="mr-2" />
+                  Edit Profile
                 </button>
-                <button
-                  type="submit"
-                  disabled={Object.values(errors).some(Boolean)}
-                  className={`flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition ${
-                    Object.values(errors).some(Boolean) ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  <FaSave className="mr-2" />
-                  Save Changes
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={handleEdit}
-                className="flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
-              >
-                <FaEdit className="mr-2" />
-                Edit Profile
-              </button>
-            )}
-          </div>
-        </form>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
