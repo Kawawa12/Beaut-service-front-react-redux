@@ -90,12 +90,23 @@ const LoginPage = () => {
     navigate("/forgot-password");
   };
 
-    const handleSendOTP = (email) => {
-    console.log("OTP sent to:", email);
-    setIsModalOpen(false);
-    // Show success message or redirect to OTP entry page
-  };
+    // Update your LoginPage's handleSendOTP function:
+const handleSendOTP = (email) => {
+  // You can either:
+  // 1. Navigate to a reset password page with the email pre-filled
+  navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+  
+  // OR 2. Show a success message
+  Swal.fire({
+    icon: 'success',
+    title: 'OTP Sent',
+    text: `A password reset OTP has been generated for ${email}`,
+    timer: 2000,
+    showConfirmButton: false
+  });
+};
 
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-white p-4">
       <Header />
@@ -112,7 +123,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-gray-700 mb-2">
+            <label htmlFor="login-email" className="block text-gray-700 mb-2">
               Email
             </label>
             <div className="relative">
@@ -121,9 +132,9 @@ const LoginPage = () => {
               </div>
               <input
                 type="email"
-                id="email"
+                id="login-email"   
                 name="email"
-                autoComplete="off"
+                autoComplete="username"
                 value={formData.email}
                 onChange={handleChange}
                 className={`pl-10 w-full p-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
@@ -138,7 +149,7 @@ const LoginPage = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-gray-700 mb-2">
+            <label htmlFor="login-password" className="block text-gray-700 mb-2">
               Password
             </label>
             <div className="relative">
@@ -147,8 +158,9 @@ const LoginPage = () => {
               </div>
               <input
                 type="password"
-                id="password"
+                id="login-password"   
                 name="password"
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
                 className={`pl-10 w-full p-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${

@@ -1,17 +1,13 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import BeautyHomePage from "./pages/client-view/HomePage";
 import ReceptionDashboard from "./pages/receptionist-view/ReceptionDashboard";
-import ReceptionCheckIn from "./pages/receptionist-view/ReceptionCheckIn";
 import ReceptionBookings from "./pages/receptionist-view/ReceptionBookings";
 import NotFound from "./pages/unavailable-page/NotFound";
 import ReceptionServices from "./pages/receptionist-view/ReceptionServices";
-import Notification from "./components/common/Notifications";
-import SpecialOffers from "./pages/receptionist-view/SpecialOffers";
 import AdminLayout from "./components/admin-view/AdminLayout";
 import AdminDashboard from "./pages/admin-view/AdminDashboard";
 import Customers from "./pages/admin-view/Customers";
 import Receptionist from "./pages/admin-view/Receptionist";
-import Reports from "./pages/admin-view/Reports";
 import ReceptionistLayout from "./components/receptionist-view/ReceptionistLayout";
 import Authenticate from "./pages/auth-page/Authenticate";
 import UnauthorizedPage from "./pages/unauth-page/Unauthorized";
@@ -30,6 +26,14 @@ import BookingWizard from "./pages/client-view/BookingWizard";
 import MyProfile from "./pages/client-view/MyProfile";
 import MyBookings from "./pages/client-view/MyBookings";
 import EventContact from "./components/common/Contact";
+import Notifications from "./pages/receptionist-view/Notification";
+import CheckInClients from "./pages/receptionist-view/Check-in-client";
+import CreateNotification from "./pages/admin-view/Notification";
+import ReportsPage from "./pages/admin-view/Reports";
+import SpecialOffers from "./pages/receptionist-view/SpecialOffer";
+import ResetPasswordPage from "./components/common/ResetPasswordPage";
+import OtpDisplayPage from "./components/common/OtpPage";
+import ForgotPasswordModal from "./components/common/ForgotPassword";
 
  
  
@@ -47,6 +51,12 @@ function App() {
       {/* Public Route */}
       <Route path="/" element={<BeautyHomePage />} />
       <Route path="/login" element={<Login />} />
+           {/* Password Reset Flow */}
+      <Route path="/forgot-password" element={<ForgotPasswordModal />} />
+      <Route path="/otp-display" element={<OtpDisplayPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify-otp" element={<VerifyOtpPage />} />
+
       <Route path="/register" element={<Register />} />
       <Route path="/my-profile" element={<MyProfile />} />
       <Route path="/my-bookings" element={<MyBookings />} />
@@ -75,7 +85,8 @@ function App() {
         <Route path="bookings" element={<ReceptionBookings />} />
         <Route path="users" element={<Customers />} />
         <Route path="receptionists" element={<Receptionist />} />
-        <Route path="reports" element={<Reports />} />
+        <Route path="notifications" element={<CreateNotification />} />
+        <Route path="reports" element={<ReportsPage />} />
       </Route>
 
       {/* Protected Receptionist Routes */}
@@ -89,11 +100,11 @@ function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<ReceptionDashboard />} />
-        <Route path="check-in" element={<ReceptionCheckIn />} />
+        <Route path="check-in" element={<CheckInClients />} />
         <Route path="bookings" element={<ReceptionBookings />} />
         <Route path="services" element={<ReceptionServices />} />
-        <Route path="notifications" element={<Notification />} />
-        <Route path="special-offers" element={<SpecialOffers />} />
+        <Route path="notifications" element={<Notifications />} />
+        <Route path="special-offers" element={<SpecialOffers/>} />
       </Route>
 
       {/* Not Found */}

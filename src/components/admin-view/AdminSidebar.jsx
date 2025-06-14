@@ -6,6 +6,7 @@ import {
   MdPeople,
   MdAccessTime,
   MdReport,
+  MdNotifications,
 } from "react-icons/md";
 import { FaUserPlus } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -13,13 +14,19 @@ import { logoutUser } from "../../../features/auth-slice";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 
-// Export the menu items to be used elsewhere
+
 export const adminMenuItems = [
   {
     id: "dashboard",
     label: "Dashboard",
     icon: <MdDashboard size={22} />,
     path: "/admin/dashboard",
+  },
+  {
+    id: "notifications",
+    label: "Notifications",
+    icon: <MdNotifications size={22} />,
+    path: "/admin/notifications",
   },
   {
     id: "manage-services",
@@ -58,6 +65,7 @@ export const adminMenuItems = [
     path: "/admin/reports",
   },
 ];
+
 
 function AdminSidebar({ closeSidebar }) {
 

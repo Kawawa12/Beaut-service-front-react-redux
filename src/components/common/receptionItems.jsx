@@ -17,12 +17,6 @@ export const ReceptionistItems = [
       path: '/reception/check-in'
     },
     {
-      id: 'bookings',
-      label: 'Appointments',
-      icon: <MdSchedule size={22} />,
-      path: '/reception/bookings'
-    },
-    {
       id: 'services',
       label: 'Services',
       icon: <MdSpa size={22} />,
