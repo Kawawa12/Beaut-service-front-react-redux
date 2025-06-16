@@ -7,7 +7,8 @@ import timeSlotReducer from "../features/slot-slice";
 import serviceReducer from "../features/service-slice";
 import bookingSlice from "../features/booking-slice" 
 import clientReducer from "../features/client-slice"
-import notificationReducer  from "../features/NotificationSlice";
+import notificationReducer from "../features/NotificationSlice";
+import serviceRoomReducer from "../features/ServiceRoom-Slice";
 
 
 
@@ -20,7 +21,8 @@ const store = configureStore({
     services: serviceReducer,
     bookings: bookingSlice,
     client: clientReducer,
-    notifications:notificationReducer
+    notifications: notificationReducer,
+    serviceRooms: serviceRoomReducer,
   },
 });
 

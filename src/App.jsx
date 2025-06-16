@@ -34,6 +34,7 @@ import SpecialOffers from "./pages/receptionist-view/SpecialOffer";
 import ResetPasswordPage from "./components/common/ResetPasswordPage";
 import OtpDisplayPage from "./components/common/OtpPage";
 import ForgotPasswordModal from "./components/common/ForgotPassword";
+import ServiceRooms from "./pages/receptionist-view/ServiceRooms";
 
  
  
@@ -104,6 +105,7 @@ function App() {
         <Route path="bookings" element={<ReceptionBookings />} />
         <Route path="services" element={<ReceptionServices />} />
         <Route path="notifications" element={<Notifications />} />
+        <Route path="rooms" element={<ServiceRooms />} />
         <Route path="special-offers" element={<SpecialOffers/>} />
       </Route>
 
