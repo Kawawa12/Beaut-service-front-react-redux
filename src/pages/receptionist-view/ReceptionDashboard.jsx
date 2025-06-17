@@ -8,6 +8,8 @@ import {
   FaSearch,
   FaSyncAlt,
   FaTimes,
+  FaSave,
+  FaTimesCircle,
 } from "react-icons/fa";
 import {
   confirmBookingByPin,
@@ -19,6 +21,7 @@ import {
   markAsComplete,
   markAsInService,
 } from "../../../features/booking-slice";
+import { fetchClientProfile, updateClientProfile } from "../../../features/client-slice";
 import Modal from "react-modal";
 import Swal from "sweetalert2";
 
@@ -57,9 +60,14 @@ function ReceptionDashboard() {
     inServiceBookings,
     completedBookings,
     reservedBookings,
-    loading,
-    error,
+    loading: bookingLoading,
+    error: bookingError,
   } = useSelector((state) => state.bookings);
+  const {
+    profile,
+    loading: profileLoading,
+    error: profileError,
+  } = useSelector((state) => state.client);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,10 +75,72 @@ function ReceptionDashboard() {
   const [isConfirmPinOpen, setIsConfirmPinOpen] = useState(false);
   const [confirmPin, setConfirmPin] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
 
+  // Fetch bookings and profile on mount
   useEffect(() => {
     dispatch(fetchAllBookings());
+    dispatch(fetchClientProfile());
   }, [dispatch]);
+
+  // Initialize formData when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.fullName || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        address: profile.address || "",
+      });
+     }
+  }, [profile]);
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+    if (isEditing) {
+      // Reset formData to profile values on cancel
+      setFormData({
+        fullName: profile?.fullName || "",
+        email: profile?.email || "",
+        phone: profile?.phone || "",
+        address: profile?.address || "",
+      });
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await dispatch(updateClientProfile(formData)).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Profile updated successfully.",
+      });
+      setIsEditing(false);
+     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error || "Failed to update profile.",
+      });
+      console.error('Profile update error:', error);
+    }
+  };
 
   const handleFilterChange = (status) => {
     setFilterStatus(status);
@@ -151,10 +221,12 @@ function ReceptionDashboard() {
 
   const getInitials = (name) => {
     return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase();
+      ? name
+          .split(" ")
+          .map((part) => part[0])
+          .join("")
+          .toUpperCase()
+      : "";
   };
 
   const openBookingModal = (booking) => {
@@ -321,8 +393,6 @@ function ReceptionDashboard() {
   return (
     <div className="flex flex-col lg:flex-row bg-gray-50 min-h-screen max-h-screen overflow-y-auto p-4 lg:p-6 gap-6">
       <div className="flex-1 order-1 lg:order-1">
-         
-
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="p-4 md:p-6 border-b flex flex-col gap-3">
             <h2 className="text-xl font-semibold text-gray-800">
@@ -420,10 +490,10 @@ function ReceptionDashboard() {
             </div>
           </div>
 
-          {loading ? (
+          {bookingLoading ? (
             <div className="p-6 text-center text-base">Loading bookings...</div>
-          ) : error ? (
-            <div className="p-6 text-center text-red-500 text-base">{error}</div>
+          ) : bookingError ? (
+            <div className="p-6 text-center text-red-500 text-base">{bookingError}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-base text-left">
@@ -500,24 +570,132 @@ function ReceptionDashboard() {
         </div>
       </div>
 
+      {/* My Profile */}
       <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-2">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-6 text-center text-white">
             <h2 className="text-xl font-semibold">My Profile</h2>
           </div>
           <div className="p-6 flex flex-col items-center">
-            <div className="relative mb-4">
-              <img
-                className="h-24 w-24 rounded-full border-4 border-white shadow-md"
-                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80"
-                alt="Profile"
-              />
-              <div className="absolute bottom-0 right-0 bg-pink-500 rounded-full p-1">
-                <FaEdit className="text-white text-sm" />
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800">Anna Hamis</h3>
-            <p className="text-gray-600 text-base mb-2">Receptionist</p>
+            {profileLoading ? (
+              <div className="text-center text-gray-500 text-base">Loading profile...</div>
+            ) : profileError ? (
+              <div className="text-center text-red-500 text-base">{profileError}</div>
+            ) : !profile ? (
+              <div className="text-center text-gray-500 text-base">No profile data available.</div>
+            ) : (
+              <>
+                <div className="relative mb-4">
+                  <div className="h-24 w-24 rounded-full bg-pink-500 flex items-center justify-center text-white text-3xl font-bold shadow-md">
+                    {getInitials(profile.fullName)}
+                  </div>
+                  <button
+                    onClick={handleEditToggle}
+                    className="absolute bottom-0 right-0 bg-pink-500 rounded-full p-1 hover:bg-pink-600 transition-colors"
+                  >
+                    {isEditing ? (
+                      <FaTimesCircle className="text-white text-sm" />
+                    ) : (
+                      <FaEdit className="text-white text-sm" />
+                    )}
+                  </button>
+                </div>
+
+                {isEditing ? (
+                  <form onSubmit={handleSubmit} className="w-full">
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-medium mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md text-base"
+                        required
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-medium mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md text-base"
+                        required
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-medium mb-1">
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md text-base"
+                        required
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-medium mb-1">
+                        Address
+                      </label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md text-base"
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        type="button"
+                        onClick={handleEditToggle}
+                        className="px-3 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-base"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-3 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 text-base flex items-center gap-1"
+                      >
+                        <FaSave /> Save
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="w-full">
+                    <div className="mb-3 text-center">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {profile.fullName || "N/A"}
+                      </h3>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-gray-500 text-sm">Email</p>
+                        <p className="text-gray-800 text-base">{profile.email || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Phone</p>
+                        <p className="text-gray-800 text-base">{profile.phone || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Address</p>
+                        <p className="text-gray-800 text-base">{profile.address || "N/A"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

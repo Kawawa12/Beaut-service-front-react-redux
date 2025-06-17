@@ -5,6 +5,7 @@ import {
   MdDesignServices,
   MdPeople,
   MdAccessTime,
+  MdMeetingRoom,
   MdReport,
   MdNotifications,
 } from "react-icons/md";
@@ -39,6 +40,12 @@ export const adminMenuItems = [
     label: "Manage Time Slot",
     icon: <MdAccessTime size={22} />,
     path: "/admin/time-slots",
+  },
+  {
+    id: "manage-rooms",  // ✅ New item here
+    label: "Manage Rooms",
+    icon: <MdMeetingRoom size={22} />,
+    path: "/admin/rooms", // This should match the route in your router
   },
   {
     id: "bookings",

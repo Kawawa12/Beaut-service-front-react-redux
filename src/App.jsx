@@ -35,6 +35,7 @@ import ResetPasswordPage from "./components/common/ResetPasswordPage";
 import OtpDisplayPage from "./components/common/OtpPage";
 import ForgotPasswordModal from "./components/common/ForgotPassword";
 import ServiceRooms from "./pages/receptionist-view/ServiceRooms";
+import AddRoom from "./pages/admin-view/AddRoom";
 
  
  
@@ -85,6 +86,7 @@ function App() {
         <Route path="time-slots" element={ <TimeSlot/>} />
         <Route path="bookings" element={<ReceptionBookings />} />
         <Route path="users" element={<Customers />} />
+        <Route path="rooms" element={<AddRoom />} />
         <Route path="receptionists" element={<Receptionist />} />
         <Route path="notifications" element={<CreateNotification />} />
         <Route path="reports" element={<ReportsPage />} />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaUser, FaEnvelope, FaPhone, FaLock, FaSpinner } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaSpinner, FaMapMarkerAlt } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header";
 import { motion } from "framer-motion";
@@ -12,6 +12,7 @@ const Register = () => {
     fullName: "",
     email: "",
     phone: "",
+    address: "",
     password: "",
     confirmPassword: "",
   });
@@ -30,6 +31,7 @@ const Register = () => {
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Email is invalid";
     if (!formData.phone) newErrors.phone = "Phone is required";
+    if (!formData.address) newErrors.address = "Address is required";
     if (!formData.password) newErrors.password = "Password is required";
     else if (formData.password.length < 6)
       newErrors.password = "Password must be at least 6 characters";
@@ -185,6 +187,32 @@ const Register = () => {
               </div>
               {errors.phone && (
                 <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+              )}
+            </div>
+
+            {/* Address Field */}
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="address">
+                Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaMapMarkerAlt className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className={`pl-10 w-full p-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                    errors.address ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="123 Main St, City, Country"
+                />
+              </div>
+              {errors.address && (
+                <p className="mt-1 text-sm text-red-500">{errors.address}</p>
               )}
             </div>
 

@@ -9,16 +9,20 @@ const MyProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { profile, loading, error } = useSelector((state) => state.client);
+
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
+    address: '',
   });
+
   const [errors, setErrors] = useState({
     fullName: false,
     email: false,
     phone: false,
+    address: false,
   });
 
   useEffect(() => {
@@ -31,41 +35,29 @@ const MyProfile = () => {
         fullName: profile.fullName || '',
         email: profile.email || '',
         phone: profile.phone || '',
+        address: profile.address || '',
       });
     }
   }, [profile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
 
-    // Basic validation
     if (name === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      setErrors({
-        ...errors,
-        email: !emailRegex.test(value),
-      });
+      setErrors({ ...errors, email: !emailRegex.test(value) });
     } else if (name === 'phone') {
       const phoneRegex = /^[0-9]{10,15}$/;
-      setErrors({
-        ...errors,
-        phone: !phoneRegex.test(value),
-      });
+      setErrors({ ...errors, phone: !phoneRegex.test(value) });
     } else if (name === 'fullName') {
-      setErrors({
-        ...errors,
-        fullName: value.trim().length < 2,
-      });
+      setErrors({ ...errors, fullName: value.trim().length < 2 });
+    } else if (name === 'address') {
+      setErrors({ ...errors, address: value.trim().length < 2 });
     }
   };
 
-  const handleEdit = () => {
-    setEditMode(true);
-  };
+  const handleEdit = () => setEditMode(true);
 
   const handleCancel = () => {
     setEditMode(false);
@@ -74,12 +66,14 @@ const MyProfile = () => {
         fullName: profile.fullName,
         email: profile.email,
         phone: profile.phone,
+        address: profile.address || '',
       });
     }
     setErrors({
       fullName: false,
       email: false,
       phone: false,
+      address: false,
     });
   };
 
@@ -89,8 +83,8 @@ const MyProfile = () => {
       fullName: formData.fullName.trim().length < 2,
       email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email),
       phone: !/^[0-9]{10,15}$/.test(formData.phone),
+      address: formData.address.trim().length < 2,
     };
-
     setErrors(newErrors);
 
     if (!Object.values(newErrors).some(Boolean)) {
@@ -116,14 +110,15 @@ const MyProfile = () => {
     }
   };
 
-  const handleGoBack = () => {
-    navigate(-1);
-  };
+  const handleGoBack = () => navigate(-1);
 
   const getInitials = (name) => {
     if (!name) return '';
-    const names = name.split(' ');
-    return names.map(n => n[0]).join('').toUpperCase();
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
   };
 
   if (loading && !profile) {
@@ -163,19 +158,16 @@ const MyProfile = () => {
         </button>
 
         <div className="bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-700">
-          {/* Profile Header */}
           <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-6 text-center">
             <div className="relative mx-auto w-32 h-32 rounded-full bg-white bg-opacity-20 flex items-center justify-center shadow-lg border-4 border-white border-opacity-20">
               {profile?.photoUrl ? (
-                <img 
-                  src={profile.photoUrl} 
-                  alt="Profile" 
+                <img
+                  src={profile.photoUrl}
+                  alt="Profile"
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <span className="text-4xl font-bold text-white">
-                  {getInitials(formData.fullName)}
-                </span>
+                <span className="text-4xl font-bold text-white">{getInitials(formData.fullName)}</span>
               )}
               {editMode && (
                 <button className="absolute bottom-0 right-0 bg-pink-500 rounded-full p-2 hover:bg-pink-600 transition shadow-md">
@@ -184,101 +176,119 @@ const MyProfile = () => {
               )}
             </div>
             <h2 className="text-3xl font-bold text-white mt-4">My Profile</h2>
-            <p className="text-pink-100 mt-1">Member since {new Date(profile?.createdAt).toLocaleDateString()}</p>
+            <p className="text-pink-100 mt-1">
+              Member since {new Date(profile?.createdAt).toLocaleDateString()}
+            </p>
           </div>
 
-          {/* Profile Form */}
           <form onSubmit={handleSubmit} className="p-6 sm:p-8">
             <div className="space-y-6">
-              {/* Full Name Field */}
-              <div className="relative">
-                <div className="flex items-center mb-2">
+              {/* Full Name */}
+              <div>
+                <label className="flex items-center mb-2 text-gray-300">
                   <FaUser className="text-pink-500 mr-2" />
-                  <label htmlFor="fullName" className="block text-gray-300 text-sm font-medium">
-                    Full Name
-                  </label>
-                </div>
+                  Full Name
+                </label>
                 <input
-                  id="fullName"
                   type="text"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
+                  disabled={!editMode}
+                  placeholder="Enter your full name"
                   className={`w-full px-4 py-3 pl-10 bg-gray-700 border ${
-                    editMode 
-                      ? errors.fullName 
-                        ? 'border-red-500 focus:ring-red-500' 
+                    editMode
+                      ? errors.fullName
+                        ? 'border-red-500 focus:ring-red-500'
                         : 'border-pink-500 focus:ring-pink-500'
                       : 'border-gray-600 focus:ring-gray-500'
                   } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition`}
-                  disabled={!editMode}
-                  placeholder="Enter your full name"
                 />
                 {errors.fullName && (
-                  <p className="mt-1 text-sm text-red-400">Please enter a valid name (at least 2 characters)</p>
+                  <p className="mt-1 text-sm text-red-400">Name must be at least 2 characters</p>
                 )}
               </div>
 
-              {/* Email Field */}
-              <div className="relative">
-                <div className="flex items-center mb-2">
+              {/* Email */}
+              <div>
+                <label className="flex items-center mb-2 text-gray-300">
                   <FaEnvelope className="text-pink-500 mr-2" />
-                  <label htmlFor="email" className="block text-gray-300 text-sm font-medium">
-                    Email
-                  </label>
-                </div>
+                  Email
+                </label>
                 <input
-                  id="email"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  disabled={!editMode}
+                  placeholder="Enter your email"
                   className={`w-full px-4 py-3 pl-10 bg-gray-700 border ${
-                    editMode 
-                      ? errors.email 
-                        ? 'border-red-500 focus:ring-red-500' 
+                    editMode
+                      ? errors.email
+                        ? 'border-red-500 focus:ring-red-500'
                         : 'border-pink-500 focus:ring-pink-500'
                       : 'border-gray-600 focus:ring-gray-500'
                   } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition`}
-                  disabled={!editMode}
-                  placeholder="Enter your email"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-400">Please enter a valid email address</p>
+                  <p className="mt-1 text-sm text-red-400">Enter a valid email address</p>
                 )}
               </div>
 
-              {/* Phone Field */}
-              <div className="relative">
-                <div className="flex items-center mb-2">
+              {/* Phone */}
+              <div>
+                <label className="flex items-center mb-2 text-gray-300">
                   <FaPhone className="text-pink-500 mr-2" />
-                  <label htmlFor="phone" className="block text-gray-300 text-sm font-medium">
-                    Phone Number
-                  </label>
-                </div>
+                  Phone Number
+                </label>
                 <input
-                  id="phone"
                   type="text"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
+                  disabled={!editMode}
+                  placeholder="Enter your phone number"
                   className={`w-full px-4 py-3 pl-10 bg-gray-700 border ${
-                    editMode 
-                      ? errors.phone 
-                        ? 'border-red-500 focus:ring-red-500' 
+                    editMode
+                      ? errors.phone
+                        ? 'border-red-500 focus:ring-red-500'
                         : 'border-pink-500 focus:ring-pink-500'
                       : 'border-gray-600 focus:ring-gray-500'
                   } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition`}
-                  disabled={!editMode}
-                  placeholder="Enter your phone number"
                 />
                 {errors.phone && (
-                  <p className="mt-1 text-sm text-red-400">Please enter a valid phone number (10-15 digits)</p>
+                  <p className="mt-1 text-sm text-red-400">Enter a valid phone number (10–15 digits)</p>
+                )}
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="flex items-center mb-2 text-gray-300">
+                  <FaUser className="text-pink-500 mr-2" />
+                  Address
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  disabled={!editMode}
+                  placeholder="Enter your address"
+                  className={`w-full px-4 py-3 pl-10 bg-gray-700 border ${
+                    editMode
+                      ? errors.address
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-pink-500 focus:ring-pink-500'
+                      : 'border-gray-600 focus:ring-gray-500'
+                  } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition`}
+                />
+                {errors.address && (
+                  <p className="mt-1 text-sm text-red-400">Address must be at least 2 characters</p>
                 )}
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Buttons */}
             <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-700">
               {editMode ? (
                 <>

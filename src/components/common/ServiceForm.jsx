@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCategories } from '../../../features/category-slice';
-import { createBeautService } from '../../../features/service-slice';
 import Swal from 'sweetalert2';
 import LoadingSpinner from './LoadingSpinner';
- 
+import { fetchCategories } from '../../../features/category-slice';
+import { updateBeautService,createBeautService } from '../../../features/service-slice';
 
-const ServiceForm = ({ isOpen, onClose }) => {
+const ServiceForm = ({ isOpen, onClose, service, isEditMode }) => {
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.categories);
-  const { loading: serviceLoading } = useSelector((state) => state.services);
+  const { loading: serviceLoading, error } = useSelector((state) => state.services);
 
   const [form, setForm] = useState({
     catId: '',
@@ -23,7 +22,17 @@ const ServiceForm = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     dispatch(fetchCategories());
-  }, [dispatch]);
+    if (isEditMode && service) {
+      setForm({
+        catId: service.categoryId || '',
+        name: service.serviceName || '',
+        description: service.description || '',
+        price: service.price || '',
+        imageFile: null,
+      });
+      setImagePreview(service.image ? `data:image/jpeg;base64,${service.image}` : null);
+    }
+  }, [dispatch, isEditMode, service]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -47,16 +56,37 @@ const ServiceForm = ({ isOpen, onClose }) => {
     setIsSubmitting(true);
     
     try {
-      await dispatch(createBeautService(form));
-      Swal.fire({
-        title: 'Success!',
-        text: 'Service created successfully',
-        icon: 'success',
-        confirmButtonText: 'OK',
-        customClass: {
-          confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md'
-        }
-      });
+      const serviceData = {
+        catId: form.catId,
+        name: form.name,
+        description: form.description,
+        price: parseFloat(form.price),
+        imageFile: form.imageFile,
+      };
+
+      if (isEditMode) {
+        await dispatch(updateBeautService({ id: service.id, serviceData })).unwrap();
+        Swal.fire({
+          title: 'Success!',
+          text: 'Service updated successfully',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          customClass: {
+            confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md'
+          }
+        });
+      } else {
+        await dispatch(createBeautService(serviceData)).unwrap();
+        Swal.fire({
+          title: 'Success!',
+          text: 'Service created successfully',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          customClass: {
+            confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md'
+          }
+        });
+      }
       
       setForm({
         catId: '',
@@ -66,10 +96,11 @@ const ServiceForm = ({ isOpen, onClose }) => {
         imageFile: null,
       });
       setImagePreview(null);
+      onClose();
     } catch (error) {
       Swal.fire({
         title: 'Error!',
-        text: error.message || 'Failed to create service',
+        text: error.message || `Failed to ${isEditMode ? 'update' : 'create'} service`,
         icon: 'error',
         confirmButtonText: 'OK'
       });
@@ -82,13 +113,12 @@ const ServiceForm = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Show loading spinner when submitting */}
       {isSubmitting && <LoadingSpinner />}
       
       <div className={`fixed inset-0 bg-black/20 bg-opacity-30 flex items-center justify-center z-50 backdrop-blur-sm ${isSubmitting ? 'pointer-events-none' : ''}`}>
         <div className={`bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4 ${isSubmitting ? 'opacity-50' : ''}`}>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">Add New Service</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{isEditMode ? 'Update Service' : 'Add New Service'}</h2>
             <button 
               onClick={onClose} 
               className="text-gray-500 hover:text-gray-700 focus:outline-none"
@@ -99,6 +129,8 @@ const ServiceForm = ({ isOpen, onClose }) => {
               </svg>
             </button>
           </div>
+          
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -183,7 +215,6 @@ const ServiceForm = ({ isOpen, onClose }) => {
                     onChange={handleChange}
                     className="hidden"
                     accept="image/*"
-                    required
                     disabled={isSubmitting}
                   />
                 </label>
@@ -220,10 +251,10 @@ const ServiceForm = ({ isOpen, onClose }) => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Saving...
+                    {isEditMode ? 'Updating...' : 'Saving...'}
                   </>
                 ) : (
-                  'Save Service'
+                  isEditMode ? 'Update Service' : 'Save Service'
                 )}
               </button>
             </div>

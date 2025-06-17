@@ -55,6 +55,9 @@ export const updateClientProfile = createAsyncThunk(
   }
 );
 
+
+
+
 const clientSlice = createSlice({
   name: "client",
   initialState: {

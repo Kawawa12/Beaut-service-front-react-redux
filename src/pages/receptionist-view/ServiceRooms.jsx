@@ -4,31 +4,9 @@ import { fetchAllRooms, assignBookingToRoom, clearAssignStatus } from '../../../
 import { fetchConfirmedBookings } from '../../../features/booking-slice';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
+import { FaHotel, FaUserFriends, FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 Modal.setAppElement('#root');
-
-const modalStyles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'transparent',
-    zIndex: 1000,
-  },
-  content: {
-    position: 'absolute',
-    background: 'white',
-    padding: '0',
-    borderRadius: '4px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    width: '1000px',
-    maxHeight: '500px',
-    overflowY: 'auto',
-  }
-};
 
 const ServiceRooms = () => {
   const dispatch = useDispatch();
@@ -46,7 +24,7 @@ const ServiceRooms = () => {
   } = useSelector(state => state.bookings);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [roomsPerPage] = useState(5);
+  const [roomsPerPage] = useState(8);
   const [assigningRoomId, setAssigningRoomId] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const buttonRefs = useRef({});
@@ -63,6 +41,7 @@ const ServiceRooms = () => {
         text: assignSuccess || assignError,
         timer: 3000,
         timerProgressBar: true,
+        showConfirmButton: false
       });
       const timer = setTimeout(() => dispatch(clearAssignStatus()), 3000);
       return () => clearTimeout(timer);
@@ -72,14 +51,13 @@ const ServiceRooms = () => {
   // Pagination logic
   const indexOfLast = currentPage * roomsPerPage;
   const indexOfFirst = indexOfLast - roomsPerPage;
-  const currentRooms = Array.isArray(rooms) ? rooms.slice(indexOfFirst, indexOfLast) : [];
-  const totalPages = Math.ceil((Array.isArray(rooms) ? rooms.length : 0) / roomsPerPage);
+  const currentRooms = rooms.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(rooms.length / roomsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const openAssignDropdown = (roomId, event) => {
     if (!roomId) {
-      console.error('Invalid room ID:', roomId);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -87,19 +65,17 @@ const ServiceRooms = () => {
       });
       return;
     }
-    console.log('Opening assign dropdown for room ID:', roomId);
     setAssigningRoomId(roomId);
     dispatch(fetchConfirmedBookings());
     const button = event.currentTarget;
     const rect = button.getBoundingClientRect();
     setModalPosition({
       top: rect.bottom + window.scrollY + 4,
-      left: Math.max(10, rect.left + window.scrollX),
+      left: Math.max(10, rect.left + window.scrollX - 200),
     });
   };
 
   const closeAssignDropdown = () => {
-    console.log('Closing assign dropdown, room ID:', assigningRoomId);
     setAssigningRoomId(null);
     setModalPosition({ top: 0, left: 0 });
   };
@@ -113,15 +89,11 @@ const ServiceRooms = () => {
       });
       return;
     }
-    console.log('Assigning booking ID:', bookingId, 'to room ID:', assigningRoomId);
     dispatch(assignBookingToRoom({ bookingId, roomId: assigningRoomId }))
       .unwrap()
       .then(() => {
-        dispatch(fetchAllRooms()); // Refresh rooms
-        dispatch(fetchConfirmedBookings()); // Refresh bookings
-      })
-      .catch((error) => {
-        console.error('Assign booking error:', error);
+        dispatch(fetchAllRooms());
+        dispatch(fetchConfirmedBookings());
       });
     closeAssignDropdown();
   };
@@ -132,88 +104,194 @@ const ServiceRooms = () => {
   );
 
   return (
-    <div className="p-6 flex flex-col items-center min-h-screen bg-gray-50">
-      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
-        All Service Rooms
-      </h2>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+            <FaHotel className="text-blue-600" />
+            Service Rooms Management
+          </h2>
+          <p className="text-gray-600 mt-1">
+            {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} available
+          </p>
+        </div>
+      </div>
 
-      {roomsLoading && <p className="text-blue-500 text-base">Loading rooms...</p>}
-      {roomsError && <p className="text-red-500 text-base">Error: {roomsError}</p>}
-      {!roomsLoading && !roomsError && rooms.length === 0 && (
-        <p className="text-gray-600 text-base">No rooms found.</p>
-      )}
-
-      {!roomsLoading && rooms.length > 0 && (
-        <div className="w-full max-w-4xl">
-          <div className="overflow-x-auto rounded-lg shadow-md">
-            <table className="min-w-full bg-white text-base">
-              <thead className="bg-blue-500 text-white text-sm uppercase">
+      {roomsLoading ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : roomsError ? (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-6">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-red-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p className="text-red-700">{roomsError}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left font-medium tracking-wider">Room No</th>
-                  <th className="px-6 py-3 text-left font-medium tracking-wider">Service Name</th>
-                  <th className="px-6 py-3 text-left font-medium tracking-wider">Capacity</th>
-                  <th className="px-6 py-3 text-left font-medium tracking-wider">Clients Inside</th>
-                  <th className="px-6 py-3 text-left font-medium tracking-wider">Actions</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <FaHotel className="text-gray-400" />
+                      Room No
+                    </div>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Service
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <FaUserFriends className="text-gray-400" />
+                      Capacity
+                    </div>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Clients Inside
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {currentRooms.map(room => (
-                  <tr key={room.id || room.roomNo} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">{room.roomNo ?? '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{room.serviceName ?? '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{room.capacity ?? '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{room.currentClientInService ?? 0}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        ref={(el) => (buttonRefs.current[room.id || room.roomNo] = el)}
-                        onClick={(e) => openAssignDropdown(room.id || room.roomNo, e)}
-                        className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
-                        disabled={room.currentClientInService >= room.capacity}
-                        title={room.currentClientInService >= room.capacity ? "Room at full capacity" : "Assign a booking"}
-                      >
-                        Assign Booking
-                      </button>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentRooms.length > 0 ? (
+                  currentRooms.map(room => (
+                    <tr key={room.id || room.roomNo} className="hover:bg-gray-50 transition-colors duration-150">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {room.roomNo ?? '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {room.serviceName ?? '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {room.capacity ?? '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-1.5 rounded-full text-xs font-medium ${
+                          room.currentClientInService >= room.capacity 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {room.currentClientInService ?? 0} / {room.capacity ?? 0}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          ref={(el) => (buttonRefs.current[room.id || room.roomNo] = el)}
+                          onClick={(e) => openAssignDropdown(room.id || room.roomNo, e)}
+                          className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm ${
+                            room.currentClientInService >= room.capacity
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                          }`}
+                          disabled={room.currentClientInService >= room.capacity}
+                          title={room.currentClientInService >= room.capacity ? "Room at full capacity" : "Assign a booking"}
+                        >
+                          Assign Booking
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <FaHotel className="h-12 w-12 mb-3 opacity-40" />
+                        <p className="text-lg font-medium">No service rooms available</p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          <div className="flex justify-center mt-6">
-            <nav className="inline-flex rounded-md shadow-sm -space-x-px">
-              <button
-                onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 rounded-l-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Previous
-              </button>
+          {rooms.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{indexOfFirst + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(indexOfLast, rooms.length)}
+                </span>{' '}
+                of <span className="font-medium">{rooms.length}</span> results
+              </div>
               
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
-                <button
-                  key={number}
-                  onClick={() => paginate(number)}
-                  className={`px-4 py-2 border border-gray-300 text-sm ${
-                    currentPage === number
-                      ? 'bg-blue-500 text-white border-blue-500'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {number}
-                </button>
-              ))}
-              
-              <button
-                onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 rounded-r-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Next
-              </button>
-            </nav>
-          </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700">Rows per page:</span>
+                  <select
+                    className="p-1 border border-gray-300 rounded-md bg-white text-sm"
+                    value={roomsPerPage}
+                    onChange={(e) => {
+                      setRoomsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={8}>8</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                  </select>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-md border disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronLeft className="text-gray-600" />
+                  </button>
+                  
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => paginate(pageNum)}
+                        className={`px-3 py-1 rounded-md text-sm ${
+                          currentPage === pageNum ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-md border disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronRight className="text-gray-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -222,31 +300,54 @@ const ServiceRooms = () => {
         onRequestClose={closeAssignDropdown}
         contentLabel="Assign Booking to Room"
         style={{
-          overlay: modalStyles.overlay,
+          overlay: {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+          },
           content: {
-            ...modalStyles.content,
             top: `${modalPosition.top}px`,
             left: `${modalPosition.left}px`,
+            right: 'auto',
+            bottom: 'auto',
             transform: 'none',
+            width: '300px',
+            padding: '0',
+            borderRadius: '0.5rem',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
           }
         }}
       >
         <div className="p-0">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 className="text-sm font-medium text-gray-700">Assign Booking</h3>
+          </div>
+          
           {bookingsLoading ? (
-            <div className="p-2 text-blue-500 text-sm">Loading bookings...</div>
+            <div className="p-4 flex justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
           ) : bookingsError ? (
-            <div className="p-2 text-red-500 text-sm">Error: {bookingsError}</div>
+            <div className="p-4 text-red-500 text-sm">{bookingsError}</div>
           ) : availableBookings.length === 0 ? (
-            <div className="p-2 text-gray-600 text-sm">No unassigned confirmed bookings.</div>
+            <div className="p-4 text-gray-500 text-sm flex flex-col items-center">
+              <FaCalendarAlt className="h-8 w-8 mb-2 opacity-40" />
+              <p>No available bookings</p>
+            </div>
           ) : (
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
               {availableBookings.map((booking) => (
                 <li
                   key={booking.id}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                   onClick={() => handleBookingSelect(booking.id)}
                 >
-                  {booking.clientName || '-'} — {booking.serviceName || '-'} ({booking.bookingDate || '-'})
+                  <div className="text-sm font-medium text-gray-900">{booking.clientName || 'Unknown Client'}</div>
+                  <div className="text-xs text-gray-500">{booking.serviceName || 'Unknown Service'}</div>
+                  <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                    <FaCalendarAlt className="text-gray-300" />
+                    {new Date(booking.bookingDate).toLocaleDateString() || '-'}
+                  </div>
                 </li>
               ))}
             </ul>

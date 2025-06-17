@@ -1,4 +1,3 @@
-// src/features/ServiceRoom‑Slice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -22,7 +21,9 @@ export const createRoom = createAsyncThunk(
   "serviceRooms/create",
   async (roomDto, thunkAPI) => {
     try {
-      const { data } = await axios.post(BASE_URL, roomDto);
+      const { data } = await axios.post(BASE_URL, roomDto, {
+        withCredentials: true,
+      });
       return data.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
@@ -40,7 +41,7 @@ export const assignBookingToRoom = createAsyncThunk(
         null,
         { params: { bookingId, roomId } }
       );
-      return data; // { statusCode, message, data: null }
+      return data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -88,6 +89,7 @@ const serviceRoomSlice = createSlice({
       .addCase(createRoom.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null;
       })
       .addCase(createRoom.fulfilled, (state, { payload }) => {
         state.loading = false;
